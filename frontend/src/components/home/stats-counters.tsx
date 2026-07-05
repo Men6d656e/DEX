@@ -13,14 +13,13 @@ interface StatItem {
   value: number;
   prefix?: string;
   suffix?: string;
-  decimals?: number;
 }
 
 const STATS: StatItem[] = [
-  { label: "Mock Tokens Minted", value: 1_000_000, suffix: "+", decimals: 0 },
-  { label: "Active Users", value: 50_000, suffix: "+", decimals: 0 },
-  { label: "Trades Executed", value: 250_000, suffix: "+", decimals: 0 },
-  { label: "Supported Tokens", value: 3, suffix: "", decimals: 0 },
+  { label: "Mock Tokens Minted", value: 1_000_000, suffix: "+" },
+  { label: "Active Users", value: 50_000, suffix: "+" },
+  { label: "Trades Executed", value: 250_000, suffix: "+" },
+  { label: "Supported Tokens", value: 3 },
 ];
 
 /**
