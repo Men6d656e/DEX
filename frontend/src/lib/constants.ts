@@ -1,11 +1,14 @@
 /**
- * DEX Dashboard — Contract Configuration
+ * DEX Dashboard - Contract Configuration
  *
  * After deploying contracts (via `make deploy-anvil` or `make deploy-sepolia`),
- * copy the deployed addresses from the forge script output into this file.
+ * copy the deployed addresses (printed as JSON by the forge script) into
+ * the CONTRACT_ADDRESSES object below.
  *
- * For local development (Anvil), use the default anvil account addresses below.
- * For Sepolia, replace with actual testnet addresses after deployment.
+ * To get the addresses:
+ *   1. make anvil          (start local chain)
+ *   2. make deploy-anvil   (deploy & copy addresses from output)
+ *   3. Paste addresses below, replacing the placeholder zeros.
  */
 
 // ================================================================

@@ -75,18 +75,20 @@ anvil: ## Start local Anvil node (port 8545)
 
 # ─── Deployment ─────────────────────────────────────────────────
 
-deploy-anvil: ## Deploy contracts to local Anvil node (interactive key input)
+deploy-anvil: build-contracts ## Deploy contracts to local Anvil node (interactive key input)
 	@echo "🚀 Deploying contracts to Anvil..."
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url http://127.0.0.1:8545 \
 		--broadcast \
+		-vvv \
 		--interactives 1
 
-deploy-sepolia: ## Deploy contracts to Sepolia testnet (interactive key input)
+deploy-sepolia: build-contracts ## Deploy contracts to Sepolia testnet (interactive key input)
 	@echo "🚀 Deploying contracts to Sepolia..."
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(SEPOLIA_RPC_URL) \
 		--broadcast \
+		-vvv \
 		--interactives 1
 
 # ─── Coverage ───────────────────────────────────────────────────
