@@ -48,6 +48,7 @@ export function TokenStatsTable({
       <div className="px-5 py-4 border-b border-border">
         <h3 className="text-sm font-semibold">Token Statistics</h3>
       </div>
+      <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -115,6 +116,7 @@ export function TokenStatsTable({
           })}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 }

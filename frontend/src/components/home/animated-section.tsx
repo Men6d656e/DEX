@@ -23,6 +23,7 @@ export function AnimatedSection({
   delay = 0,
 }: AnimatedSectionProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -33,9 +34,7 @@ export function AnimatedSection({
       ([entry]) => {
         if (entry.isIntersecting) {
           if (delay > 0) {
-            const id = window.setTimeout(() => setIsVisible(true), delay);
-            // Store timeout on element for cleanup
-            (element as HTMLElement & { _timeoutId?: number })._timeoutId = id;
+            timeoutRef.current = setTimeout(() => setIsVisible(true), delay);
           } else {
             setIsVisible(true);
           }
@@ -49,9 +48,9 @@ export function AnimatedSection({
 
     return () => {
       observer.disconnect();
-      const el = element as HTMLElement & { _timeoutId?: number };
-      if (el._timeoutId) {
-        clearTimeout(el._timeoutId);
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     };
   }, [delay]);

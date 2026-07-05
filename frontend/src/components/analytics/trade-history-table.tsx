@@ -68,7 +68,7 @@ export function TradeHistoryTable({
           {trades.length} trades (24h)
         </Badge>
       </div>
-      <div className="max-h-[400px] overflow-y-auto">
+      <div className="max-h-[400px] overflow-y-auto overflow-x-auto">
         <Table>
           <TableHeader className="sticky top-0 bg-card z-10">
             <TableRow>

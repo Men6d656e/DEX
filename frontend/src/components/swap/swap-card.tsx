@@ -316,7 +316,10 @@ export function SwapCard() {
                 setApprovalState("idle");
               }}
             >
-              <SelectTrigger className="w-[110px] border-0 bg-transparent p-0 shadow-none focus:ring-0">
+              <SelectTrigger
+                className="w-[100px] sm:w-[110px] border-0 bg-transparent p-0 shadow-none focus:ring-0"
+                aria-label="Select token to swap from"
+              >
                 <SelectValue placeholder="Token" />
               </SelectTrigger>
               <SelectContent>
@@ -343,6 +346,7 @@ export function SwapCard() {
                   }
                 }}
                 className="border-0 bg-transparent p-0 text-right text-lg font-medium tabular-nums shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/50"
+                aria-label={`Amount of ${fromSymbol} to swap`}
               />
               {fromBalance && amountInParsed > 0n && (
                 <button
@@ -392,7 +396,7 @@ export function SwapCard() {
 
         {/* ── Rate & Slippage Info ── */}
         {swapRate && swapRate > 0n && (
-          <div className="rounded-lg bg-muted/40 p-3 space-y-1.5">
+          <div className="rounded-lg bg-muted/40 p-3 space-y-1.5 overflow-x-auto">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
                 Rate
