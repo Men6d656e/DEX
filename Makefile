@@ -77,14 +77,14 @@ anvil: ## Start local Anvil node (port 8545)
 
 deploy-anvil: ## Deploy contracts to local Anvil node (interactive key input)
 	@echo "🚀 Deploying contracts to Anvil..."
-	cd contracts && forge script script/Deploy.s.sol \
+	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url http://127.0.0.1:8545 \
 		--broadcast \
 		--interactives 1
 
 deploy-sepolia: ## Deploy contracts to Sepolia testnet (interactive key input)
 	@echo "🚀 Deploying contracts to Sepolia..."
-	cd contracts && forge script script/Deploy.s.sol \
+	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(SEPOLIA_RPC_URL) \
 		--broadcast \
 		--interactives 1
