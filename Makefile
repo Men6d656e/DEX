@@ -77,18 +77,43 @@ anvil: ## Start local Anvil node (port 8545)
 
 deploy-anvil: build-contracts ## Deploy contracts to local Anvil node (interactive key input)
 	@echo "🚀 Deploying contracts to Anvil..."
+	@echo ""
+	@echo "You need two things:"
+	@echo "  1. Your wallet ADDRESS (public) — paste below when prompted"
+	@echo "  2. Your PRIVATE KEY — will be prompted by --interactives"
+	@echo ""
+	@echo "For Anvil: use the first address from the anvil startup output."
+	@echo ""
+	@read -p "Wallet address (0x...): " addr; \
+	export SENDER=$$addr; \
+	echo ""; \
+	echo "✅ SENDER set to $$SENDER"; \
+	echo "🔑 Now paste your private key when prompted..."; \
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url http://127.0.0.1:8545 \
 		--broadcast \
 		-vvv \
+		--sender $$SENDER \
 		--interactives 1
 
 deploy-sepolia: build-contracts ## Deploy contracts to Sepolia testnet (interactive key input)
 	@echo "🚀 Deploying contracts to Sepolia..."
+	@echo ""
+	@echo "You need:"
+	@echo "  1. SEPOLIA_RPC_URL env var (e.g., export SEPOLIA_RPC_URL=https://rpc.sepolia.org)"
+	@echo "  2. Your wallet ADDRESS (public) — paste below"
+	@echo "  3. Your PRIVATE KEY — will be prompted by --interactives"
+	@echo ""
+	@read -p "Wallet address (0x...): " addr; \
+	export SENDER=$$addr; \
+	echo ""; \
+	echo "✅ SENDER set to $$SENDER"; \
+	echo "🔑 Now paste your private key when prompted..."; \
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $(SEPOLIA_RPC_URL) \
 		--broadcast \
 		-vvv \
+		--sender $$SENDER \
 		--interactives 1
 
 # ─── Coverage ───────────────────────────────────────────────────

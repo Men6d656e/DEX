@@ -19,8 +19,13 @@ import {MockDEX} from "../src/MockDEX.sol";
  * 5. MockDEX — Ratio-based DEX for mETH ↔ mUSDC swaps
  *
  * Usage:
- *   Anvil:   forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadcast --interactives 1
- *   Sepolia: forge script script/Deploy.s.sol:Deploy --rpc-url $SEPOLIA_RPC_URL --broadcast --interactives 1
+ *   export SENDER=0xYourWalletAddress
+ *   Anvil:   forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadcast --interactives 1 --sender $SENDER
+ *   Sepolia: forge script script/Deploy.s.sol:Deploy --rpc-url $SEPOLIA_RPC_URL --broadcast --interactives 1 --sender $SENDER
+ *
+ * Note: --interactives 1 prompts for the PRIVATE KEY to sign transactions.
+ *       SENDER env var + --sender flag provides the public address for the script.
+ *       Do NOT set PRIVATE_KEY in a .env file when using --interactives.
  *
  * The script outputs contract addresses which should be copied to the frontend config.
  */
@@ -42,10 +47,12 @@ contract Deploy is Script {
     ///         Called by `forge script`.
     function run() external {
         // --- Setup ---
-        // The deployer's private key is prompted via --interactives 1
-        // and is accessible through vm.envUint("PRIVATE_KEY")
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
+        // The deployer's public address is read from the SENDER env var
+        // (set via `export SENDER=0x...` or passed via Makefile).
+        // The private key is provided securely via --interactives 1 at the CLI.
+        // These are two separate mechanisms — never use vm.envUint("PRIVATE_KEY")
+        // with --interactives because the interactive prompt doesn't set env vars.
+        address deployer = vm.envAddress("SENDER");
 
         console2.log("============================================");
         console2.log("DEX Dashboard - Contract Deployment");
@@ -55,7 +62,8 @@ contract Deploy is Script {
         console2.log("Block:   ", block.number);
         console2.log("");
 
-        vm.startBroadcast(deployerPrivateKey);
+        // startBroadcast with no args — uses the key from --interactives 1 for signing
+        vm.startBroadcast();
 
         // --- Step 1: Deploy Mock Tokens ---
         // Use deployer as temporary faucet; will update after Faucet is deployed

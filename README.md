@@ -84,7 +84,17 @@ make anvil
 make deploy-anvil
 ```
 
-### 5. Start Frontend
+### 5. Configure Environment (Optional)
+
+For live CoinGecko market data in the charts, create `frontend/.env.local`:
+
+```bash
+NEXT_PUBLIC_COINGECKO_API_KEY=your_api_key_here
+```
+
+Get a free key at https://www.coingecko.com/en/api
+
+### 6. Start Frontend
 
 ```bash
 make install-frontend
