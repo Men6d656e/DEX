@@ -4,57 +4,81 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DEX Dashboard — Documentation</title>
+  <meta name="description" content="User and developer documentation for the DEX Dashboard — a full-stack Web3 educational platform for learning DeFi." />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
-  <header class="hero">
-    <div class="container">
-      <h1>DEX Dashboard</h1>
-      <p class="subtitle">Decentralized Learning & Trading Platform</p>
-      <p class="description">
-        Complete documentation for users and developers.
-      </p>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="./" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="./">Home</a>
+        <a href="./user-guide/">User Guide</a>
+        <a href="./developer-guide/">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
     </div>
   </header>
 
-  <main class="container">
-    <section class="cards">
-      <a href="user-guide/" class="card card--user">
-        <div class="card-icon">👤</div>
-        <h2>User Guide</h2>
-        <p>
-          Learn how to connect your wallet, claim mock tokens, perform swaps,
-          and read market charts.
-        </p>
-        <span class="card-link">Read the User Guide →</span>
-      </a>
-
-      <a href="developer-guide/" class="card card--dev">
-        <div class="card-icon">🔧</div>
-        <h2>Developer Guide</h2>
-        <p>
-          Understand the architecture, smart contracts, frontend structure,
-          deployment process, and testing strategy.
-        </p>
-        <span class="card-link">Read the Developer Guide →</span>
-      </a>
-    </section>
-
-    <section class="info">
-      <h3>Quick Links</h3>
-      <ul>
-        <li><a href="https://github.com/Men6d656e/DEX">GitHub Repository</a></li>
-        <li><a href="user-guide/getting-started.html">Getting Started (User)</a></li>
-        <li><a href="developer-guide/architecture.html">Architecture Overview (Developer)</a></li>
-        <li><a href="developer-guide/deployment.html">Deployment Guide (Developer)</a></li>
-      </ul>
-    </section>
-  </main>
-
-  <footer>
+  <!-- Hero -->
+  <section class="hero">
     <div class="container">
-      <p>DEX Dashboard — MIT License</p>
+      <h1>
+        <span class="gradient">DEX Dashboard</span>
+      </h1>
+      <p>
+        Explore the world of decentralized finance through hands-on interaction
+        with a fully functional mock exchange. No real funds required.
+      </p>
+      <div class="hero-cta">
+        <a href="user-guide/" class="btn btn-primary">📖 User Guide</a>
+        <a href="developer-guide/" class="btn btn-outline">🔧 Developer Guide</a>
+        <a href="https://github.com/Men6d656e/DEX" class="btn btn-outline" target="_blank" rel="noopener">GitHub →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Overview -->
+  <section class="content-section">
+    <div class="container">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-icon">💰</div>
+          <h3>Faucet</h3>
+          <p>Mint mock ETH and BTC tokens daily with a 24-hour cooldown. Track your lifetime claims and claim history.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔄</div>
+          <h3>Swap</h3>
+          <p>Trade mock tokens (mETH ↔ mUSDC) with instant ratio-based execution, slippage protection, and reserve tracking.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">📊</div>
+          <h3>Analytics</h3>
+          <p>Real-time candlestick charts from CoinGecko, token statistics, trade history, and portfolio tracking.</p>
+        </div>
+      </div>
+
+      <h2>Quick Start</h2>
+      <ol>
+        <li><strong>Connect your wallet</strong> — Use MetaMask or any injected wallet. Switch to Anvil (local) or Sepolia (testnet).</li>
+        <li><strong>Get mock tokens</strong> — Visit the <a href="user-guide/faucet.html">Faucet</a> page to claim mETH and mBTC (10 tokens each every 24h).</li>
+        <li><strong>Start trading</strong> — Head to the <a href="user-guide/swap.html">Swap</a> page to trade mETH for mUSDC.</li>
+        <li><strong>Track performance</strong> — The <a href="user-guide/analytics.html">Analytics</a> page shows market data and your portfolio.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License. Built with Foundry, Next.js, and shadcn/ui.</p>
     </div>
   </footer>
+
+  <script src="assets/js/main.js"></script>
 </body>
 </html>

@@ -4,46 +4,69 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Guide — DEX Dashboard</title>
+  <meta name="description" content="Learn how to use the DEX Dashboard — connect your wallet, claim tokens, and start trading." />
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
-  <header class="page-header">
-    <div class="container">
-      <a href="../" class="back-link">← Home</a>
-      <h1>User Guide</h1>
-      <p>Everything you need to use the DEX Dashboard.</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">User Guide</a>
+        <a href="../developer-guide/">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
     </div>
   </header>
 
-  <main class="container content">
-    <nav class="toc">
-      <h2>Topics</h2>
-      <ul>
-        <li><a href="getting-started.html">Getting Started</a> — Connect your wallet and navigate the dashboard</li>
-        <li><a href="faucet.html">Using the Faucet</a> — Claim mock tokens (mETH, mBTC)</li>
-        <li><a href="swap.html">Swapping Tokens</a> — Trade mock tokens with instant execution</li>
-        <li><a href="analytics.html">Market Analytics</a> — Read charts and track market data</li>
-      </ul>
-    </nav>
+  <div class="container">
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <span>User Guide</span>
+    </div>
 
-    <section>
-      <h2>What is the DEX Dashboard?</h2>
-      <p>
-        The DEX Dashboard is an educational Web3 application that simulates a
-        decentralized exchange (DEX) environment. It allows you to:
-      </p>
-      <ul>
-        <li><strong>Claim mock tokens</strong> — Get free mETH and mBTC tokens from the faucet (once per day)</li>
-        <li><strong>Swap tokens</strong> — Trade between mETH and mUSDC with transparent pricing</li>
-        <li><strong>Track markets</strong> — View real-time charts and analytics powered by CoinGecko</li>
-      </ul>
-    </section>
-  </main>
+    <h1>👤 User Guide</h1>
+    <p>Learn how to connect your wallet, claim test tokens, perform swaps, and navigate the analytics dashboard.</p>
 
-  <footer>
+    <div class="card-grid">
+      <a href="getting-started.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">🚀</div>
+        <h3>Getting Started</h3>
+        <p>Set up your wallet, connect to the dashboard, and understand the navigation.</p>
+      </a>
+      <a href="faucet.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">💰</div>
+        <h3>Using the Faucet</h3>
+        <p>Claim mock ETH and BTC tokens, track cooldowns, and view your claim history.</p>
+      </a>
+      <a href="swap.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">🔄</div>
+        <h3>Trading on the Swap</h3>
+        <p>Execute token swaps, understand rate calculations, and configure slippage settings.</p>
+      </a>
+      <a href="analytics.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">📊</div>
+        <h3>Analytics Dashboard</h3>
+        <p>Read candlestick charts, track token statistics, and monitor your portfolio.</p>
+      </a>
+    </div>
+
+    <div class="content-section">
+      <h2>Need Help?</h2>
+      <p>If you encounter any issues, check the <a href="../developer-guide/">Developer Guide</a> for technical details or visit the <a href="https://github.com/Men6d656e/DEX" target="_blank" rel="noopener">GitHub repository</a> to open an issue.</p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
     <div class="container">
-      <p>DEX Dashboard — <a href="../">Docs Home</a></p>
+      <p>DEX Dashboard — MIT License</p>
     </div>
   </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

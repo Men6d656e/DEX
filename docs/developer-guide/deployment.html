@@ -3,22 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deployment — Developer Guide | DEX Dashboard</title>
+  <title>Deployment — DEX Dashboard Developer Guide</title>
+  <meta name="description" content="Deployment guide for the DEX Dashboard — local, testnet, and production." />
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
-  <header class="page-header">
-    <div class="container">
-      <a href="index.html" class="back-link">← Developer Guide</a>
-      <h1>Deployment</h1>
-      <p>Local and testnet deployment guides.</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="../user-guide/">User Guide</a>
+        <a href="./" class="active">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
     </div>
   </header>
-  <main class="container content">
-    <p>Content coming soon. This page will provide step-by-step instructions for deploying contracts to Anvil and Sepolia using <code>forge script --interactives 1</code>.</p>
-  </main>
-  <footer>
-    <div class="container"><p>DEX Dashboard — <a href="../">Docs Home</a></p></div>
+
+  <div class="container">
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <a href="./">Developer Guide</a>
+      <span>/</span>
+      <span>Deployment</span>
+    </div>
+
+    <h1>🚀 Deployment Guide</h1>
+
+    <h2>Prerequisites</h2>
+    <ul>
+      <li><a href="https://book.getfoundry.sh/getting-started/installation" target="_blank" rel="noopener">Foundry</a> (forge, cast, anvil)</li>
+      <li><a href="https://nodejs.org/" target="_blank" rel="noopener">Node.js</a> >= 18.0.0</li>
+      <li><a href="https://git-scm.com/" target="_blank" rel="noopener">Git</a></li>
+    </ul>
+
+    <h2>1. Install Dependencies</h2>
+    <pre>git clone https://github.com/Men6d656e/DEX.git
+cd DEX
+make install</pre>
+
+    <h2>2. Build Contracts</h2>
+    <pre>make build-contracts</pre>
+
+    <h2>3. Run Tests</h2>
+    <pre># All tests
+make test
+
+# Just contract tests
+make test-contracts
+
+# Just frontend tests
+make test-frontend
+
+# Coverage report
+make coverage</pre>
+
+    <h2>4. Local Development (Anvil)</h2>
+    <p>Start a local Anvil node in one terminal:</p>
+    <pre>make anvil</pre>
+    <p>In another terminal, deploy contracts:</p>
+    <pre>make deploy-anvil</pre>
+    <p>You'll be prompted to enter a private key interactively. For Anvil, you can use one of the default private keys printed when Anvil starts.</p>
+
+    <h3>Update Contract Addresses</h3>
+    <p>After deployment, the script outputs contract addresses in JSON format. Copy these into <code>frontend/src/lib/constants.ts</code>.</p>
+
+    <h2>5. Start Frontend</h2>
+    <pre>make install-frontend
+make build-frontend
+
+# Or for development with hot reload:
+cd frontend && npm run dev</pre>
+    <p>The frontend will be available at <code>http://localhost:3000</code>.</p>
+
+    <h2>6. Sepolia Testnet</h2>
+    <p>Set up environment variables:</p>
+    <pre>export SEPOLIA_RPC_URL=https://rpc.sepolia.org</pre>
+    <p>Deploy:</p>
+    <pre>make deploy-sepolia</pre>
+    <p>You'll be prompted for a private key interactively (use a wallet with Sepolia ETH for gas).</p>
+
+    <h2>7. Production Build</h2>
+    <pre>make build</pre>
+    <p>The frontend build is output to <code>frontend/.next/</code> and can be deployed to any Node.js hosting platform (Vercel, Railway, etc.).</p>
+
+    <h2>8. CoinGecko API Key (Optional)</h2>
+    <p>To use live market data instead of simulated charts:</p>
+    <ol>
+      <li>Get a free API key from <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener">CoinGecko</a></li>
+      <li>Set it in your environment: <code>NEXT_PUBLIC_COINGECKO_API_KEY=your_key_here</code></li>
+      <li>For local development, add it to <code>frontend/.env.local</code></li>
+    </ol>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License</p>
+    </div>
   </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

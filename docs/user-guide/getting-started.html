@@ -3,22 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting Started — User Guide | DEX Dashboard</title>
+  <title>Getting Started — DEX Dashboard User Guide</title>
+  <meta name="description" content="Get started with the DEX Dashboard — set up MetaMask, connect your wallet, and navigate the app." />
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
-  <header class="page-header">
-    <div class="container">
-      <a href="index.html" class="back-link">← User Guide</a>
-      <h1>Getting Started</h1>
-      <p>How to connect your wallet and use the dashboard.</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">User Guide</a>
+        <a href="../developer-guide/">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
     </div>
   </header>
-  <main class="container content">
-    <p>Content coming soon. This page will guide you through connecting your wallet and navigating the DEX Dashboard.</p>
-  </main>
-  <footer>
-    <div class="container"><p>DEX Dashboard — <a href="../">Docs Home</a></p></div>
+
+  <div class="container">
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <a href="./">User Guide</a>
+      <span>/</span>
+      <span>Getting Started</span>
+    </div>
+
+    <h1>🚀 Getting Started</h1>
+
+    <h2>1. Prerequisites</h2>
+    <ul>
+      <li>A modern web browser (Chrome, Firefox, Brave, or Edge)</li>
+      <li><a href="https://metamask.io/" target="_blank" rel="noopener">MetaMask</a> browser extension installed</li>
+      <li>For local development: Anvil running on <code>http://127.0.0.1:8545</code></li>
+    </ul>
+
+    <h2>2. Connect Your Wallet</h2>
+    <ol>
+      <li>Open the DEX Dashboard in your browser.</li>
+      <li>Click the <strong>"Connect Wallet"</strong> button in the top-right corner.</li>
+      <li>MetaMask will prompt you to select an account and connect.</li>
+      <li>Once connected, the button will show your network name and truncated address (e.g., <code>ANVIL 0x1234...5678</code>).</li>
+    </ol>
+
+    <blockquote>
+      <strong>Tip:</strong> If you're using a local Anvil node, make sure to switch MetaMask to the <strong>Anvil</strong> network (Chain ID: 31337) or let MetaMask auto-detect it.
+    </blockquote>
+
+    <h2>3. Navigate the Dashboard</h2>
+    <p>The top navigation bar provides access to all major sections:</p>
+    <ul>
+      <li><strong>Home</strong> — Landing page with feature overview and stats</li>
+      <li><strong>Faucet</strong> — Claim mock tokens (mETH, mBTC)</li>
+      <li><strong>Swap</strong> — Trade tokens (mETH ↔ mUSDC)</li>
+      <li><strong>Analytics</strong> — Charts, token stats, and portfolio tracking</li>
+    </ul>
+
+    <h2>4. Next Steps</h2>
+    <ul>
+      <li><a href="faucet.html">Claim tokens from the Faucet</a></li>
+      <li><a href="swap.html">Execute a swap on the DEX</a></li>
+      <li><a href="analytics.html">Explore the Analytics dashboard</a></li>
+    </ul>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License</p>
+    </div>
   </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

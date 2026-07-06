@@ -4,46 +4,69 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Developer Guide — DEX Dashboard</title>
+  <meta name="description" content="Developer documentation for the DEX Dashboard — architecture, contracts, frontend, and deployment." />
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
-  <header class="page-header">
-    <div class="container">
-      <a href="../" class="back-link">← Home</a>
-      <h1>Developer Guide</h1>
-      <p>Technical documentation for developers and contributors.</p>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="../user-guide/">User Guide</a>
+        <a href="./" class="active">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
     </div>
   </header>
 
-  <main class="container content">
-    <nav class="toc">
-      <h2>Topics</h2>
-      <ul>
-        <li><a href="architecture.html">Architecture</a> — System design, monorepo structure, tech stack</li>
-        <li><a href="contracts.html">Smart Contracts</a> — MockERC20, Faucet, MockDEX specifications</li>
-        <li><a href="frontend.html">Frontend</a> — Next.js structure, components, state management</li>
-        <li><a href="deployment.html">Deployment</a> — Local & testnet deployment guides</li>
-        <li><a href="testing.html">Testing</a> — Contract & frontend testing, coverage</li>
-      </ul>
-    </nav>
+  <div class="container">
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <span>Developer Guide</span>
+    </div>
 
-    <section>
-      <h2>Project Overview</h2>
-      <p>
-        The DEX Dashboard is a monorepo containing:
-      </p>
-      <ul>
-        <li><code>contracts/</code> — Foundry (Solidity) smart contracts with OpenZeppelin</li>
-        <li><code>frontend/</code> — Next.js 16 application with shadcn/ui and Tailwind CSS</li>
-        <li><code>docs/</code> — GitHub Pages documentation (this site)</li>
-      </ul>
-    </section>
-  </main>
+    <h1>🔧 Developer Guide</h1>
+    <p>Comprehensive documentation for developers working on the DEX Dashboard — from architecture to deployment.</p>
 
-  <footer>
+    <div class="card-grid">
+      <a href="architecture.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">🏗</div>
+        <h3>Architecture</h3>
+        <p>System overview, monorepo structure, and component relationships.</p>
+      </a>
+      <a href="contracts.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">📄</div>
+        <h3>Smart Contracts</h3>
+        <p>MockERC20, Faucet, and MockDEX contract specifications and design decisions.</p>
+      </a>
+      <a href="frontend.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">⚛</div>
+        <h3>Frontend</h3>
+        <p>Next.js App Router structure, shadcn/ui components, and custom hooks.</p>
+      </a>
+      <a href="deployment.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">🚀</div>
+        <h3>Deployment</h3>
+        <p>Local development, Anvil node, Sepolia testnet, and production deployment.</p>
+      </a>
+      <a href="testing.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">🧪</div>
+        <h3>Testing</h3>
+        <p>Contract tests, frontend tests, coverage reporting, and best practices.</p>
+      </a>
+    </div>
+  </div>
+
+  <footer class="site-footer">
     <div class="container">
-      <p>DEX Dashboard — <a href="../">Docs Home</a></p>
+      <p>DEX Dashboard — MIT License</p>
     </div>
   </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

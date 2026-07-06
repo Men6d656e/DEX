@@ -3,6 +3,12 @@
 /**
  * AnalyticsClient — Client component that connects to the analytics hook
  * and renders all analytics sections with AnimatedSection wrappers.
+ *
+ * Combines:
+ * - Real CoinGecko market data with candlestick charts
+ * - Simulated mock token statistics
+ * - Trade history
+ * - Portfolio overview
  */
 import { useAnalytics } from "@/hooks/use-analytics";
 import { AnimatedSection } from "@/components/home/animated-section";
@@ -10,6 +16,7 @@ import { AnalyticsStatsCards } from "@/components/analytics/stats-cards";
 import { TokenStatsTable } from "@/components/analytics/token-stats-table";
 import { TradeHistoryTable } from "@/components/analytics/trade-history-table";
 import { PortfolioOverview } from "@/components/analytics/portfolio-overview";
+import { MarketDataPanel } from "@/components/charts/market-stats";
 
 export function AnalyticsClient() {
   const {
@@ -34,11 +41,16 @@ export function AnalyticsClient() {
         />
       </AnimatedSection>
 
-      {/* Main Content Grid */}
+      {/* CoinGecko Market Data — Full width */}
+      <AnimatedSection delay={100}>
+        <MarketDataPanel />
+      </AnimatedSection>
+
+      {/* Bottom Grid: Token Stats + Trade History + Portfolio */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Token Stats + Trade History */}
         <div className="lg:col-span-2 space-y-6">
-          <AnimatedSection delay={100}>
+          <AnimatedSection delay={150}>
             <TokenStatsTable
               tokens={tokens}
               isLoading={isLoading}
@@ -56,7 +68,7 @@ export function AnalyticsClient() {
 
         {/* Right: Portfolio + Info */}
         <div className="space-y-6">
-          <AnimatedSection delay={150}>
+          <AnimatedSection delay={200}>
             <PortfolioOverview
               portfolio={portfolio}
               totalValue={totalPortfolioValue}
@@ -73,15 +85,23 @@ export function AnalyticsClient() {
                 <li className="flex items-start gap-2">
                   <span className="text-blue-500 mt-0.5">•</span>
                   <span>
-                    Market metrics combine on-chain DEX reserve data with
-                    simulated volume and activity for the demo.
+                    Market data powered by{" "}
+                    <a
+                      href="https://www.coingecko.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      CoinGecko
+                    </a>
+                    . Candlestick charts show real BTC, ETH, and USDC prices.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-500 mt-0.5">•</span>
                   <span>
-                    Token prices are derived from the DEX swap rate (1 mETH ={" "}
-                    {isDeployed ? "variable" : "1700"} mUSDC).
+                    Token statistics combine on-chain DEX reserve data with
+                    simulated volume and activity for the demo tokens.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
