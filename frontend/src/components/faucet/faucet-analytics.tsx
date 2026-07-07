@@ -23,7 +23,10 @@ export function FaucetAnalytics({ tokenIndex }: FaucetAnalyticsProps) {
   const { isConnected } = useAccount();
   const { claimInfo, isLoading } = useClaimInfo(tokenIndex);
 
-  const tokenName = tokenIndex === 0 ? "mETH" : "mBTC";
+  const tokenNames = ["mETH", "mBTC", "mUSDC"];
+  const tokenColors = ["text-blue-500", "text-orange-500", "text-blue-600"];
+  const tokenName = tokenIndex < tokenNames.length ? tokenNames[tokenIndex] : "Unknown";
+  const tokenColor = tokenIndex < tokenColors.length ? tokenColors[tokenIndex] : "text-muted-foreground";
 
   if (!isConnected) {
     return (
@@ -48,7 +51,7 @@ export function FaucetAnalytics({ tokenIndex }: FaucetAnalyticsProps) {
         ? `${claimInfo.totalClaimed.toString()} ${tokenName}`
         : "0 tokens",
       icon: Droplet,
-      color: tokenIndex === 0 ? "text-blue-500" : "text-orange-500",
+      color: tokenColor,
     },
     {
       label: "Last Claim",

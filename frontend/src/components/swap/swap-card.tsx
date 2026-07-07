@@ -13,6 +13,8 @@
  * - Insufficient allowance (approval flow)
  * - Swap pending / confirming / confirmed
  * - Swap error
+ *
+ * Supports all pairs: mETH↔mUSDC, mBTC↔mUSDC
  */
 import { useState, useMemo, useEffect, useCallback } from "react";
 import {
@@ -47,17 +49,17 @@ import {
   formatDexBalance,
   formatRate,
   calculatePriceImpact,
+  getSwapInfo,
+  type SwapTokenSymbol,
 } from "@/hooks/use-dex";
 import { SlippageSettings } from "@/components/swap/slippage-settings";
 
-/** Swap direction */
-type SwapDirection = "mETH-to-mUSDC" | "mUSDC-to-mETH";
-
-/** Token symbols available in the DEX */
-const SWAP_TOKENS = [
+/** All token symbols available for swapping */
+const SWAP_TOKENS: { symbol: SwapTokenSymbol; address: `0x${string}` }[] = [
   { symbol: "mETH", address: CONTRACT_ADDRESSES.mETH },
+  { symbol: "mBTC", address: CONTRACT_ADDRESSES.mBTC },
   { symbol: "mUSDC", address: CONTRACT_ADDRESSES.mUSDC },
-] as const;
+];
 
 /** Approval state machine */
 type ApprovalState = "idle" | "approving" | "approved";
@@ -67,24 +69,30 @@ export function SwapCard() {
   const { address, isConnected } = useAccount();
 
   // ── DEX Info ──
-  const { swapRate, ethReserve, usdcReserve, isLoading, isDeployed } =
-    useDexInfo();
+  const {
+    ethSwapRate,
+    btcSwapRate,
+    ethReserve,
+    btcReserve,
+    usdcReserve,
+    isLoading,
+    isDeployed,
+  } = useDexInfo();
 
   // ── Token balances ──
   const { balances } = useTokenBalances();
 
   // ── Swap state ──
-  const [direction, setDirection] = useState<SwapDirection>("mETH-to-mUSDC");
+  const [fromSymbol, setFromSymbol] = useState<SwapTokenSymbol>("mETH");
+  const [toSymbol, setToSymbol] = useState<SwapTokenSymbol>("mUSDC");
   const [fromAmount, setFromAmount] = useState("");
   const [slippage, setSlippage] = useState(0.5);
 
-  // Derived tokens
-  const fromSymbol = direction === "mETH-to-mUSDC" ? "mETH" : "mUSDC";
-  const toSymbol = direction === "mETH-to-mUSDC" ? "mUSDC" : "mETH";
-  const fromIsETH = fromSymbol === "mETH";
-
-  // Current reserve for price impact calculation
-  const currentReserve = fromIsETH ? ethReserve : usdcReserve;
+  // Swap info for the selected pair
+  const swapInfo = useMemo(
+    () => getSwapInfo(fromSymbol, toSymbol, ethSwapRate, btcSwapRate, ethReserve, btcReserve, usdcReserve),
+    [fromSymbol, toSymbol, ethSwapRate, btcSwapRate, ethReserve, btcReserve, usdcReserve],
+  );
 
   // Validate and parse input amount
   const amountInParsed = useMemo(() => {
@@ -99,9 +107,9 @@ export function SwapCard() {
 
   // Calculate expected output
   const expectedOutput = useMemo(() => {
-    if (!swapRate || swapRate === 0n || amountInParsed === 0n) return 0n;
-    return calculateOutput(amountInParsed, swapRate, fromIsETH);
-  }, [amountInParsed, swapRate, fromIsETH]);
+    if (!swapInfo.rate || swapInfo.rate === 0n || amountInParsed === 0n) return 0n;
+    return calculateOutput(amountInParsed, swapInfo.rate, swapInfo.isSellingAsset);
+  }, [amountInParsed, swapInfo]);
 
   // Apply slippage to get minimum output
   const slippageBps = Math.round(slippage * 100); // 0.5% → 50 bps
@@ -111,12 +119,11 @@ export function SwapCard() {
 
   // Price impact
   const priceImpact = useMemo(() => {
-    return calculatePriceImpact(amountInParsed, currentReserve ?? 0n);
-  }, [amountInParsed, currentReserve]);
+    return calculatePriceImpact(amountInParsed, swapInfo.fromReserve ?? 0n);
+  }, [amountInParsed, swapInfo.fromReserve]);
 
   // ── Allowance Check ──
-  const fromTokenAddress =
-    fromSymbol === "mETH" ? CONTRACT_ADDRESSES.mETH : CONTRACT_ADDRESSES.mUSDC;
+  const fromTokenAddress = SWAP_TOKENS.find((t) => t.symbol === fromSymbol)?.address ?? CONTRACT_ADDRESSES.mETH;
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: fromTokenAddress,
@@ -185,10 +192,11 @@ export function SwapCard() {
   const handleSwap = useCallback(() => {
     swap({
       fromToken: fromSymbol,
+      toToken: toSymbol,
       amountIn: amountInParsed,
       minOut: minOutput,
     });
-  }, [swap, fromSymbol, amountInParsed, minOutput]);
+  }, [swap, fromSymbol, toSymbol, amountInParsed, minOutput]);
 
   // Reset form after successful swap
   useEffect(() => {
@@ -252,12 +260,17 @@ export function SwapCard() {
     }
   };
 
-  // ── Toggle direction ──
+  // ── Toggle direction (swap from/to) ──
   const toggleDirection = () => {
-    setDirection((prev) =>
-      prev === "mETH-to-mUSDC" ? "mUSDC-to-mETH" : "mETH-to-mUSDC",
-    );
+    const prevFrom = fromSymbol;
+    const prevTo = toSymbol;
+    // Only swap if both tokens are valid and different
+    if (prevFrom !== prevTo) {
+      setFromSymbol(prevTo);
+      setToSymbol(prevFrom);
+    }
     setFromAmount("");
+    setApprovalState("idle");
   };
 
   // Set max amount from balance
@@ -305,13 +318,13 @@ export function SwapCard() {
           <div className="flex items-center gap-2 p-3 rounded-lg border border-border bg-background transition-colors focus-within:border-ring">
             <Select
               value={fromSymbol}
-              onValueChange={(val) => {
-                // Only swap direction if switching from token
-                if (val === "mUSDC" && fromSymbol === "mETH") {
-                  setDirection("mUSDC-to-mETH");
-                } else if (val === "mETH" && fromSymbol === "mUSDC") {
-                  setDirection("mETH-to-mUSDC");
+              onValueChange={(val: string) => {
+                const newFrom = val as SwapTokenSymbol;
+                // If user selects the same token as 'to', swap them
+                if (newFrom === toSymbol) {
+                  setToSymbol(fromSymbol);
                 }
+                setFromSymbol(newFrom);
                 setFromAmount("");
                 setApprovalState("idle");
               }}
@@ -382,10 +395,36 @@ export function SwapCard() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 p-3 rounded-lg border border-border bg-background/50">
-            <div className="w-[110px] px-3 py-1.5 rounded-md bg-secondary/30 text-sm font-medium text-center">
-              {toSymbol}
-            </div>
+          <div className="flex items-center gap-2 p-3 rounded-lg border border-border bg-background/50 transition-colors focus-within:border-ring">
+            <Select
+              value={toSymbol}
+              onValueChange={(val: string) => {
+                const newTo = val as SwapTokenSymbol;
+                // If user selects the same token as 'from', swap them
+                if (newTo === fromSymbol) {
+                  setFromSymbol(toSymbol);
+                }
+                setToSymbol(newTo);
+                setFromAmount("");
+                setApprovalState("idle");
+              }}
+            >
+              <SelectTrigger
+                className="w-[100px] sm:w-[110px] border-0 bg-transparent p-0 shadow-none focus:ring-0"
+                aria-label="Select token to swap to"
+              >
+                <SelectValue placeholder="Token" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {SWAP_TOKENS.map((token) => (
+                    <SelectItem key={token.symbol} value={token.symbol}>
+                      <span className="font-medium">{token.symbol}</span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
             <div className="flex-1 text-right text-lg font-medium tabular-nums text-muted-foreground">
               {expectedOutput > 0n
                 ? formatDexBalance(expectedOutput)
@@ -395,17 +434,16 @@ export function SwapCard() {
         </div>
 
         {/* ── Rate & Slippage Info ── */}
-        {swapRate && swapRate > 0n && (
+        {swapInfo.rate && swapInfo.rate > 0n && (
           <div className="rounded-lg bg-muted/40 p-3 space-y-1.5 overflow-x-auto">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">
                 Rate
               </span>
               <span className="font-medium tabular-nums">
-                1 {fromSymbol} ={" "}
-                {direction === "mETH-to-mUSDC"
-                  ? `${formatRate(swapRate)} ${toSymbol}`
-                  : `${(1 / Number(formatRate(swapRate).replace(/,/g, ""))).toFixed(6)} ${toSymbol}`}
+                {swapInfo.isSellingAsset
+                  ? `1 ${fromSymbol} = ${formatRate(swapInfo.rate)} ${toSymbol}`
+                  : `1 ${toSymbol} = ${formatRate(swapInfo.rate)} ${fromSymbol}`}
               </span>
             </div>
             {expectedOutput > 0n && (

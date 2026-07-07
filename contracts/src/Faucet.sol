@@ -7,12 +7,12 @@ import {MockERC20} from "./MockERC20.sol";
 /**
  * @title Faucet
  * @notice Time-locked faucet for distributing mock tokens.
- *         Users can claim 10 tokens (mETH or mBTC) once every 24 hours.
+ *         Users can claim 10 tokens (mETH, mBTC, or mUSDC) once every 24 hours.
  *
  * @dev Inherits OpenZeppelin's Ownable for administrative controls.
  *
  * Features:
- * - Two tokens: mETH (index 0) and mBTC (index 1)
+ * - Three tokens: mETH (index 0), mBTC (index 1), mUSDC (index 2)
  * - 24-hour cooldown per user per token
  * - Lifetime claimed tracking per user per token
  * - View function to query claim eligibility and remaining time
@@ -108,19 +108,22 @@ contract Faucet is Ownable {
      * @notice Constructs the Faucet contract.
      * @param mETH The address of the Mock ETH token contract
      * @param mBTC The address of the Mock BTC token contract
+     * @param mUSDC The address of the Mock USDC token contract
      *
      * Requirements:
-     * - Both token addresses must be non-zero
+     * - All token addresses must be non-zero
      */
     constructor(
         address mETH,
-        address mBTC
+        address mBTC,
+        address mUSDC
     ) Ownable(msg.sender) {
-        if (mETH == address(0) || mBTC == address(0)) {
+        if (mETH == address(0) || mBTC == address(0) || mUSDC == address(0)) {
             revert Faucet__InvalidAddress();
         }
         tokens.push(MockERC20(mETH));
         tokens.push(MockERC20(mBTC));
+        tokens.push(MockERC20(mUSDC));
         claimAmount = DEFAULT_CLAIM_AMOUNT;
         cooldown = DEFAULT_COOLDOWN;
     }
@@ -133,7 +136,7 @@ contract Faucet is Ownable {
      * @notice Claims tokens from the faucet.
      * @dev Uses checks-effects-interactions pattern for safety.
      *
-     * @param tokenIndex Index of the token to claim (0 = mETH, 1 = mBTC)
+     * @param tokenIndex Index of the token to claim (0 = mETH, 1 = mBTC, 2 = mUSDC)
      *
      * Requirements:
      * - `tokenIndex` must be valid (0 or 1)
@@ -173,7 +176,7 @@ contract Faucet is Ownable {
      * @notice Returns claim eligibility information for a user.
      *
      * @param user The address to query
-     * @param tokenIndex Index of the token (0 = mETH, 1 = mBTC)
+     * @param tokenIndex Index of the token (0 = mETH, 1 = mBTC, 2 = mUSDC)
      *
      * @return canClaim Whether the user can claim now
      * @return timeRemaining Seconds remaining until next claim (0 if can claim)

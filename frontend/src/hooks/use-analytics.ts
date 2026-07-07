@@ -175,12 +175,12 @@ function generateMarketOverview(
 export function useAnalytics() {
   const { address, isConnected } = useAccount();
   const { data: nativeBalance } = useBalance({ address });
-  const { swapRate, ethReserve, usdcReserve, isLoading, isDeployed } =
+  const { ethSwapRate, ethReserve, usdcReserve, isLoading, isDeployed } =
     useDexInfo();
   const { balances, isLoading: isLoadingTokens } = useTokenBalances();
 
   // Derive numeric rate from BigInt
-  const dexRate = swapRate ? Number(swapRate) / 1e18 : 1700;
+  const dexRate = ethSwapRate ? Number(ethSwapRate) / 1e18 : 1700;
 
   // Memoized data — regenerate on each poll/re-fetch
   const analyticsData = useMemo(() => {

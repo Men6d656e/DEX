@@ -15,8 +15,8 @@ import {MockDEX} from "../src/MockDEX.sol";
  * 1. MockERC20 (mETH) — Mock ETH token
  * 2. MockERC20 (mBTC) — Mock BTC token
  * 3. MockERC20 (mUSDC) — Mock USDC token (used for swap)
- * 4. Faucet — Time-locked faucet for mETH and mBTC
- * 5. MockDEX — Ratio-based DEX for mETH ↔ mUSDC swaps
+ * 4. Faucet — Time-locked faucet for mETH, mBTC, and mUSDC
+ * 5. MockDEX — Ratio-based DEX for mETH ↔ mUSDC and mBTC ↔ mUSDC swaps
  *
  * Usage:
  *   export SENDER=0xYourWalletAddress
@@ -32,14 +32,20 @@ import {MockDEX} from "../src/MockDEX.sol";
 contract Deploy is Script {
     // ── Constants ────────────────────────────────────────────────
 
-    /// @notice Initial swap rate: 1 mETH = 1700 mUSDC (scaled by 1e18)
-    uint256 public constant INITIAL_SWAP_RATE = 1700 * 10 ** 18;
+    /// @notice Initial ETH swap rate: 1 mETH = 1700 mUSDC (scaled by 1e18)
+    uint256 public constant INITIAL_ETH_SWAP_RATE = 1700 * 10 ** 18;
+
+    /// @notice Initial BTC swap rate: 1 mBTC = 40000 mUSDC (scaled by 1e18)
+    uint256 public constant INITIAL_BTC_SWAP_RATE = 40_000 * 10 ** 18;
 
     /// @notice Initial mETH liquidity for the DEX
     uint256 public constant INITIAL_ETH_LIQUIDITY = 100 * 10 ** 18;
 
-    /// @notice Initial mUSDC liquidity for the DEX (100 * 1700 = 170,000)
-    uint256 public constant INITIAL_USDC_LIQUIDITY = 170_000 * 10 ** 18;
+    /// @notice Initial mBTC liquidity for the DEX
+    uint256 public constant INITIAL_BTC_LIQUIDITY = 5 * 10 ** 18;
+
+    /// @notice Initial mUSDC liquidity for the DEX (100*1700 + 5*40000 = 370,000)
+    uint256 public constant INITIAL_USDC_LIQUIDITY = 370_000 * 10 ** 18;
 
     // --- Run ------------------------------------------------------------------
 
@@ -82,7 +88,7 @@ contract Deploy is Script {
         // --- Step 2: Deploy Faucet ---
         console2.log("--- Step 2: Deploying Faucet ---");
 
-        Faucet faucet = new Faucet(address(mETH), address(mBTC));
+        Faucet faucet = new Faucet(address(mETH), address(mBTC), address(mUSDC));
         console2.log("Faucet deployed at:", address(faucet));
         console2.log("");
 
@@ -91,8 +97,10 @@ contract Deploy is Script {
 
         MockDEX dex = new MockDEX(
             address(mETH),
+            address(mBTC),
             address(mUSDC),
-            INITIAL_SWAP_RATE
+            INITIAL_ETH_SWAP_RATE,
+            INITIAL_BTC_SWAP_RATE
         );
         console2.log("MockDEX deployed at:", address(dex));
         console2.log("");
@@ -106,16 +114,18 @@ contract Deploy is Script {
         // Deployer is still the faucet for mETH, mBTC, mUSDC (not yet updated)
         mUSDC.mint(deployer, INITIAL_USDC_LIQUIDITY);
         mETH.mint(deployer, INITIAL_ETH_LIQUIDITY);
+        mBTC.mint(deployer, INITIAL_BTC_LIQUIDITY);
         console2.log("Minted tokens to deployer for liquidity");
 
         // Approve DEX to spend deployer's tokens
         mETH.approve(address(dex), INITIAL_ETH_LIQUIDITY);
+        mBTC.approve(address(dex), INITIAL_BTC_LIQUIDITY);
         mUSDC.approve(address(dex), INITIAL_USDC_LIQUIDITY);
         console2.log("Approved DEX to spend tokens");
 
         // Add liquidity to the DEX
-        dex.addLiquidity(INITIAL_ETH_LIQUIDITY, INITIAL_USDC_LIQUIDITY);
-        console2.log("Added liquidity: 100 mETH + 170,000 mUSDC");
+        dex.addLiquidity(INITIAL_ETH_LIQUIDITY, INITIAL_BTC_LIQUIDITY, INITIAL_USDC_LIQUIDITY);
+        console2.log("Added liquidity: 100 mETH + 5 mBTC + 370,000 mUSDC");
         console2.log("");
 
         // --- Step 5: Configure Token Faucet Addresses ---
@@ -128,6 +138,9 @@ contract Deploy is Script {
 
         mBTC.setFaucet(address(faucet));
         console2.log("mBTC faucet  ->", address(faucet));
+
+        mUSDC.setFaucet(address(faucet));
+        console2.log("mUSDC faucet ->", address(faucet));
         console2.log("");
 
         vm.stopBroadcast();
@@ -149,7 +162,8 @@ contract Deploy is Script {
         console2.log("}");
         console2.log("");
 
-        console2.log("Swap Rate: 1 mETH = 1700 mUSDC");
+        console2.log("Swap Rate (ETH): 1 mETH = 1700 mUSDC");
+        console2.log("Swap Rate (BTC): 1 mBTC = 40000 mUSDC");
         console2.log("Faucet Claim Amount: 10 tokens (per claim)");
         console2.log("Faucet Cooldown: 24 hours");
         console2.log("");

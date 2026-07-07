@@ -97,10 +97,36 @@ Get a free key at https://www.coingecko.com/en/api
 ### 6. Start Frontend
 
 ```bash
+# Development mode (hot reload):
+make dev
+
+# Or step by step:
 make install-frontend
+make dev-frontend
+```
+
+### 7. Deploy & Auto-Update Addresses
+
+After deploying contracts, auto-capture the addresses into the frontend config:
+
+```bash
+# Deploy to Anvil then auto-update constants.ts:
+make deploy-update
+
+# This runs: make deploy-anvil && ./scripts/update-addresses.sh
+# Then start the frontend:
+make dev-frontend
+```
+
+### 8. Production Build
+
+```bash
+# Build and serve production:
+make prod
+
+# Or step by step:
 make build-frontend
-# or for development:
-cd frontend && npm run dev
+make prod-frontend
 ```
 
 ---
@@ -133,6 +159,12 @@ make coverage
 | `make anvil` | Start local Anvil node |
 | `make deploy-anvil` | Deploy to Anvil (`--interactives 1`) |
 | `make deploy-sepolia` | Deploy to Sepolia (`--interactives 1`) |
+| `make deploy-update` | Deploy to Anvil + auto-update frontend addresses |
+| `make dev` | Install frontend deps + start dev server |
+| `make dev-frontend` | Start frontend dev server (localhost:3000) |
+| `make prod` | Build + serve production |
+| `make prod-frontend` | Serve production build |
+| `make generate-abi` | Generate type-safe wagmi hooks from ABIs |
 | `make clean` | Clean all artifacts |
 | `make docs` | Serve docs locally at port 3001 |
 | `make coverage` | Generate coverage report |

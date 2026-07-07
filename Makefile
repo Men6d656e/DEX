@@ -4,7 +4,8 @@
 # ============================================================
 
 .PHONY: help install build test test-contracts test-frontend \
-	anvil deploy-anvil deploy-sepolia clean docs fmt coverage
+	anvil deploy-anvil deploy-sepolia deploy-update dev dev-frontend prod prod-frontend \
+	clean docs fmt coverage generate-abi
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -152,6 +153,36 @@ fmt: ## Format all code (Solidity + TypeScript)
 	@echo "💅 Formatting frontend..."
 	@npm run lint -- --fix 2>/dev/null || true
 	@echo "✅ Formatting complete."
+
+# ─── Frontend Development ──────────────────────────────────────
+
+dev: install-frontend dev-frontend ## Install deps + start dev server
+
+dev-frontend: ## Start frontend dev server (localhost:3000)
+	@echo "🚀 Starting frontend dev server..."
+	cd frontend && npm run dev
+
+# ─── Production ────────────────────────────────────────────────
+
+prod: build-frontend prod-frontend ## Build + serve production
+
+prod-frontend: ## Serve production build (localhost:3000)
+	@echo "🚀 Starting production server..."
+	cd frontend && npm run start
+
+# ─── Address Auto-Capture ──────────────────────────────────────
+
+deploy-update: deploy-anvil ## Deploy to Anvil + auto-update frontend addresses
+	@echo "📝 Updating frontend contract addresses..."
+	@./scripts/update-addresses.sh 31337
+	@echo "✅ Addresses updated! Run 'make dev-frontend' to start the app."
+
+# ─── ABI Code Generation ───────────────────────────────────────
+
+generate-abi: ## Generate type-safe wagmi hooks from contract ABIs
+	@echo "🏗️  Generating wagmi CLI types..."
+	cd frontend && npx wagmi generate
+	@echo "✅ ABI types generated in frontend/src/lib/generated.ts"
 
 # ─── Documentation ──────────────────────────────────────────────
 

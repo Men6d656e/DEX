@@ -34,24 +34,27 @@ export default function FaucetPage() {
 
           {/* Analytics — spans 1 column */}
           <div className="space-y-6">
-            <AnimatedSection delay={200}>
-              <FaucetAnalytics tokenIndex={0} />
-            </AnimatedSection>
-            <AnimatedSection delay={300}>
-              <FaucetAnalytics tokenIndex={1} />
-            </AnimatedSection>
+          <AnimatedSection delay={200}>
+            <FaucetAnalytics tokenIndex={0} />
+          </AnimatedSection>
+          <AnimatedSection delay={300}>
+            <FaucetAnalytics tokenIndex={1} />
+          </AnimatedSection>
+          <AnimatedSection delay={400}>
+            <FaucetAnalytics tokenIndex={2} />
+          </AnimatedSection>
           </div>
         </div>
 
         {/* Info Footer */}
-        <AnimatedSection delay={400}>
+        <AnimatedSection delay={500}>
           <div className="mt-12 text-center text-xs text-muted-foreground space-y-1">
             <p>
               Faucet distributes 10 tokens per claim with a 24-hour cooldown
               per token per wallet.
             </p>
             <p>
-              Your mETH and mBTC cooldowns are tracked independently.
+              Your mETH, mBTC, and mUSDC cooldowns are tracked independently.
             </p>
           </div>
         </AnimatedSection>

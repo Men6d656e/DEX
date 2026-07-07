@@ -27,6 +27,7 @@ import { CONTRACT_ADDRESSES, FAUCET_COOLDOWN } from "@/lib/constants";
 const FAUCET_TOKENS = [
   { index: 0, symbol: "mETH", name: "Mock ETH", color: "text-blue-500" },
   { index: 1, symbol: "mBTC", name: "Mock BTC", color: "text-orange-500" },
+  { index: 2, symbol: "mUSDC", name: "Mock USDC", color: "text-blue-600" },
 ] as const;
 
 export function FaucetClaimCard() {
@@ -79,7 +80,7 @@ export function FaucetClaimCard() {
       <CardContent className="space-y-6">
         {/* ── Token Selector Tabs ── */}
         <Tabs value={selectedToken} onValueChange={setSelectedToken} className="w-full">
-          <TabsList className="grid grid-cols-2 w-full">
+          <TabsList className="grid grid-cols-3 w-full">
             {FAUCET_TOKENS.map((t) => (
               <TabsTrigger key={t.index} value={t.index.toString()}>
                 <span className={t.color}>{t.symbol}</span>

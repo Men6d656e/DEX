@@ -8,12 +8,20 @@ import { type Abi } from "viem";
 
 /**
  * MockDEX ABI — view + write functions for swaps.
+ * Supports two pairs: mETH ↔ mUSDC and mBTC ↔ mUSDC.
  */
 export const DEX_ABI = [
   // ── View Functions ──
   {
     type: "function",
-    name: "getRate",
+    name: "getEthRate",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getBtcRate",
     inputs: [],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
@@ -21,6 +29,13 @@ export const DEX_ABI = [
   {
     type: "function",
     name: "ethReserve",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "btcReserve",
     inputs: [],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
@@ -43,6 +58,15 @@ export const DEX_ABI = [
   },
   {
     type: "function",
+    name: "mBTC",
+    inputs: [],
+    outputs: [
+      { name: "", type: "address", internalType: "contract IERC20" },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "mUSDC",
     inputs: [],
     outputs: [
@@ -52,7 +76,14 @@ export const DEX_ABI = [
   },
   {
     type: "function",
-    name: "swapRate",
+    name: "ethSwapRate",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "btcSwapRate",
     inputs: [],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     stateMutability: "view",
@@ -75,6 +106,26 @@ export const DEX_ABI = [
     inputs: [
       { name: "usdcAmount", type: "uint256", internalType: "uint256" },
       { name: "minETH", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "swapBTCForUSDC",
+    inputs: [
+      { name: "btcAmount", type: "uint256", internalType: "uint256" },
+      { name: "minUSDC", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "swapUSDCForBTC",
+    inputs: [
+      { name: "usdcAmount", type: "uint256", internalType: "uint256" },
+      { name: "minBTC", type: "uint256", internalType: "uint256" },
     ],
     outputs: [],
     stateMutability: "nonpayable",
@@ -109,6 +160,7 @@ export const DEX_ABI = [
         internalType: "address",
       },
       { name: "ethAmount", type: "uint256", indexed: false, internalType: "uint256" },
+      { name: "btcAmount", type: "uint256", indexed: false, internalType: "uint256" },
       { name: "usdcAmount", type: "uint256", indexed: false, internalType: "uint256" },
     ],
     anonymous: false,

@@ -17,16 +17,24 @@ import {
 import { DEX_ABI } from "@/lib/dex-abi";
 import { CONTRACT_ADDRESSES } from "@/lib/constants";
 import { useCallback } from "react";
+import type { Abi } from "viem";
 
 // ================================================================
 // Types
 // ================================================================
 
+/** Supported token symbols for swaps */
+export type SwapTokenSymbol = "mETH" | "mBTC" | "mUSDC";
+
 export interface DexInfo {
-  /** Swap rate: mUSDC per 1 mETH (scaled by 1e18) */
-  swapRate: bigint | undefined;
+  /** ETH swap rate: mUSDC per 1 mETH (scaled by 1e18) */
+  ethSwapRate: bigint | undefined;
+  /** BTC swap rate: mUSDC per 1 mBTC (scaled by 1e18) */
+  btcSwapRate: bigint | undefined;
   /** mETH reserve in the DEX pool */
   ethReserve: bigint | undefined;
+  /** mBTC reserve in the DEX pool */
+  btcReserve: bigint | undefined;
   /** mUSDC reserve in the DEX pool */
   usdcReserve: bigint | undefined;
   isLoading: boolean;
@@ -36,7 +44,8 @@ export interface DexInfo {
 
 export interface SwapState {
   swap: (args: {
-    fromToken: "mETH" | "mUSDC";
+    fromToken: SwapTokenSymbol;
+    toToken: SwapTokenSymbol;
     amountIn: bigint;
     minOut: bigint;
   }) => void;
@@ -51,41 +60,55 @@ export interface SwapState {
 // ================================================================
 
 /**
- * Reads the current swap rate and reserves from the MockDEX contract.
+ * Reads all swap rates and reserves from the MockDEX contract.
  */
 export function useDexInfo(): DexInfo {
   const isDeployed =
     CONTRACT_ADDRESSES.dex !==
     "0x0000000000000000000000000000000000000000";
 
+  const queryEnabled = isDeployed;
+
   const { data, isLoading, isError } = useReadContracts({
     contracts: [
       {
         address: CONTRACT_ADDRESSES.dex,
-        abi: DEX_ABI,
-        functionName: "swapRate",
-      },
+        abi: DEX_ABI as Abi,
+        functionName: "getEthRate",
+      } as const,
       {
         address: CONTRACT_ADDRESSES.dex,
-        abi: DEX_ABI,
+        abi: DEX_ABI as Abi,
+        functionName: "getBtcRate",
+      } as const,
+      {
+        address: CONTRACT_ADDRESSES.dex,
+        abi: DEX_ABI as Abi,
         functionName: "ethReserve",
-      },
+      } as const,
       {
         address: CONTRACT_ADDRESSES.dex,
-        abi: DEX_ABI,
+        abi: DEX_ABI as Abi,
+        functionName: "btcReserve",
+      } as const,
+      {
+        address: CONTRACT_ADDRESSES.dex,
+        abi: DEX_ABI as Abi,
         functionName: "usdcReserve",
-      },
+      } as const,
     ],
     query: {
-      enabled: isDeployed,
+      enabled: queryEnabled,
       refetchInterval: 10_000,
     },
   });
 
   return {
-    swapRate: data?.[0]?.result as bigint | undefined,
-    ethReserve: data?.[1]?.result as bigint | undefined,
-    usdcReserve: data?.[2]?.result as bigint | undefined,
+    ethSwapRate: data?.[0]?.result as bigint | undefined,
+    btcSwapRate: data?.[1]?.result as bigint | undefined,
+    ethReserve: data?.[2]?.result as bigint | undefined,
+    btcReserve: data?.[3]?.result as bigint | undefined,
+    usdcReserve: data?.[4]?.result as bigint | undefined,
     isLoading,
     isError,
     isDeployed,
@@ -97,7 +120,10 @@ export function useDexInfo(): DexInfo {
 // ================================================================
 
 /**
- * Hook that provides swap execution (both directions) + tx state.
+ * Hook that provides swap execution (all pairs) + tx state.
+ * Supported pairs:
+ *   - mETH ↔ mUSDC (swapETHForUSDC / swapUSDCForETH)
+ *   - mBTC ↔ mUSDC (swapBTCForUSDC / swapUSDCForBTC)
  */
 export function useSwap(): SwapState {
   const { writeContract, data: hash, isPending } = useWriteContract();
@@ -106,24 +132,46 @@ export function useSwap(): SwapState {
 
   const swap = useCallback(
     (args: {
-      fromToken: "mETH" | "mUSDC";
+      fromToken: SwapTokenSymbol;
+      toToken: SwapTokenSymbol;
       amountIn: bigint;
       minOut: bigint;
     }) => {
-      const { fromToken, amountIn, minOut } = args;
+      const { fromToken, toToken, amountIn, minOut } = args;
 
-      if (fromToken === "mETH") {
+      // mETH → mUSDC
+      if (fromToken === "mETH" && toToken === "mUSDC") {
         writeContract({
           address: CONTRACT_ADDRESSES.dex,
           abi: DEX_ABI,
           functionName: "swapETHForUSDC",
           args: [amountIn, minOut],
         });
-      } else {
+      }
+      // mBTC → mUSDC
+      else if (fromToken === "mBTC" && toToken === "mUSDC") {
+        writeContract({
+          address: CONTRACT_ADDRESSES.dex,
+          abi: DEX_ABI,
+          functionName: "swapBTCForUSDC",
+          args: [amountIn, minOut],
+        });
+      }
+      // mUSDC → mETH
+      else if (fromToken === "mUSDC" && toToken === "mETH") {
         writeContract({
           address: CONTRACT_ADDRESSES.dex,
           abi: DEX_ABI,
           functionName: "swapUSDCForETH",
+          args: [amountIn, minOut],
+        });
+      }
+      // mUSDC → mBTC
+      else if (fromToken === "mUSDC" && toToken === "mBTC") {
+        writeContract({
+          address: CONTRACT_ADDRESSES.dex,
+          abi: DEX_ABI,
+          functionName: "swapUSDCForBTC",
           args: [amountIn, minOut],
         });
       }
@@ -141,19 +189,19 @@ export function useSwap(): SwapState {
 /**
  * Calculates the expected output amount for a swap.
  *
- * - Selling mETH → mUSDC: output = (amountIn * swapRate) / 1e18
- * - Selling mUSDC → mETH: output = (amountIn * 1e18) / swapRate
+ * - Selling an asset (e.g. mETH) for mUSDC: output = (amountIn * rate) / 1e18
+ * - Selling mUSDC for an asset: output = (amountIn * 1e18) / rate
  */
 export function calculateOutput(
   amountIn: bigint,
-  swapRate: bigint,
-  fromIsETH: boolean,
+  rate: bigint,
+  isSellingAsset: boolean,
 ): bigint {
   if (amountIn === 0n) return 0n;
-  if (fromIsETH) {
-    return (amountIn * swapRate) / 10n ** 18n;
+  if (isSellingAsset) {
+    return (amountIn * rate) / 10n ** 18n;
   } else {
-    return (amountIn * 10n ** 18n) / swapRate;
+    return (amountIn * 10n ** 18n) / rate;
   }
 }
 
@@ -197,7 +245,7 @@ export function formatDexBalance(value: bigint): string {
 
 /**
  * Formats the swap rate into a display string.
- * e.g. 1700 * 10**18 → "1,700.00"
+ * e.g. 1700 * 10**18 → "1,700"
  */
 export function formatRate(rate: bigint | undefined): string {
   if (!rate) return "—";
@@ -208,6 +256,66 @@ export function formatRate(rate: bigint | undefined): string {
     return `${parts[0]}.${parts[1].slice(0, 2)}`;
   }
   return formatted;
+}
+
+/**
+ * Resolves the swap direction and rate for a given pair.
+ * Returns { rate, isSellingAsset, fromReserve, toReserve } where:
+ *   - isSellingAsset: true if selling mETH/mBTC, false if selling mUSDC
+ *   - rate: the appropriate swap rate
+ */
+export function getSwapInfo(
+  fromSymbol: string,
+  toSymbol: string,
+  ethSwapRate: bigint | undefined,
+  btcSwapRate: bigint | undefined,
+  ethReserve: bigint | undefined,
+  btcReserve: bigint | undefined,
+  usdcReserve: bigint | undefined,
+): {
+  rate: bigint | undefined;
+  isSellingAsset: boolean;
+  fromReserve: bigint | undefined;
+  toReserve: bigint | undefined;
+} {
+  if (fromSymbol === "mETH" && toSymbol === "mUSDC") {
+    return {
+      rate: ethSwapRate,
+      isSellingAsset: true,
+      fromReserve: ethReserve,
+      toReserve: usdcReserve,
+    };
+  }
+  if (fromSymbol === "mBTC" && toSymbol === "mUSDC") {
+    return {
+      rate: btcSwapRate,
+      isSellingAsset: true,
+      fromReserve: btcReserve,
+      toReserve: usdcReserve,
+    };
+  }
+  if (fromSymbol === "mUSDC" && toSymbol === "mETH") {
+    return {
+      rate: ethSwapRate,
+      isSellingAsset: false,
+      fromReserve: usdcReserve,
+      toReserve: ethReserve,
+    };
+  }
+  if (fromSymbol === "mUSDC" && toSymbol === "mBTC") {
+    return {
+      rate: btcSwapRate,
+      isSellingAsset: false,
+      fromReserve: usdcReserve,
+      toReserve: btcReserve,
+    };
+  }
+  return {
+    rate: undefined,
+    isSellingAsset: true,
+    fromReserve: undefined,
+    toReserve: undefined,
+  };
 }
 
 /**

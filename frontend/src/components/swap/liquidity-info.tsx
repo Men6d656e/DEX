@@ -11,7 +11,7 @@
 import { useDexInfo, formatDexBalance, formatRate } from "@/hooks/use-dex";
 
 export function LiquidityInfo() {
-  const { swapRate, ethReserve, usdcReserve, isLoading, isDeployed } =
+  const { ethSwapRate, btcSwapRate, ethReserve, btcReserve, usdcReserve, isLoading, isDeployed } =
     useDexInfo();
 
   return (
@@ -50,6 +50,16 @@ export function LiquidityInfo() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
+                mBTC Reserve
+              </span>
+              <span className="text-xs font-medium tabular-nums">
+                {btcReserve !== undefined
+                  ? `${formatDexBalance(btcReserve)} mBTC`
+                  : "—"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
                 mUSDC Reserve
               </span>
               <span className="text-xs font-medium tabular-nums">
@@ -65,21 +75,18 @@ export function LiquidityInfo() {
               <span className="text-xs text-muted-foreground">
                 1 mETH ={" "}
                 <span className="font-medium text-foreground tabular-nums">
-                  {formatRate(swapRate)}
+                  {formatRate(ethSwapRate)}
                 </span>{" "}
                 mUSDC
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                1 mUSDC ={" "}
+                1 mBTC ={" "}
                 <span className="font-medium text-foreground tabular-nums">
-                  {swapRate && swapRate > 0n
-                    ? (1 / Number(formatRate(swapRate).replace(/,/g, "")))
-                        .toFixed(6)
-                    : "—"}
+                  {formatRate(btcSwapRate)}
                 </span>{" "}
-                mETH
+                mUSDC
               </span>
             </div>
           </div>

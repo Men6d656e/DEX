@@ -11,7 +11,7 @@ import {Faucet} from "../src/Faucet.sol";
  *
  * Coverage targets:
  * - Constructor: token setup, default values, zero-address revert
- * - claimToken: successful claim (mETH, mBTC), cooldown enforcement, lifetime tracking
+ * - claimToken: successful claim (mETH, mBTC, mUSDC), cooldown enforcement, lifetime tracking
  * - getClaimInfo: eligibility, time remaining, lifetime claimed
  * - Admin: setClaimAmount, setCooldown, onlyOwner restrictions
  * - Edge cases: double-claim, token index out of bounds, time manipulation
@@ -23,6 +23,7 @@ contract FaucetTest is Test {
 
     MockERC20 public mETH;
     MockERC20 public mBTC;
+    MockERC20 public mUSDC;
     Faucet public faucet;
 
     address public owner;
@@ -63,16 +64,20 @@ contract FaucetTest is Test {
         mETH = new MockERC20("Mock ETH", "mETH", tempFaucet);
         vm.prank(owner);
         mBTC = new MockERC20("Mock BTC", "mBTC", tempFaucet);
+        vm.prank(owner);
+        mUSDC = new MockERC20("Mock USDC", "mUSDC", tempFaucet);
 
         // Deploy faucet
         vm.prank(owner);
-        faucet = new Faucet(address(mETH), address(mBTC));
+        faucet = new Faucet(address(mETH), address(mBTC), address(mUSDC));
 
         // Set faucet addresses in tokens to the real faucet contract
         vm.prank(owner);
         mETH.setFaucet(address(faucet));
         vm.prank(owner);
         mBTC.setFaucet(address(faucet));
+        vm.prank(owner);
+        mUSDC.setFaucet(address(faucet));
     }
 
     // ============================================================
@@ -83,6 +88,7 @@ contract FaucetTest is Test {
     function test_Constructor_SetsTokens() public view {
         assertEq(address(faucet.tokens(0)), address(mETH));
         assertEq(address(faucet.tokens(1)), address(mBTC));
+        assertEq(address(faucet.tokens(2)), address(mUSDC));
     }
 
     /// @notice Test constructor sets default claim amount
@@ -104,14 +110,21 @@ contract FaucetTest is Test {
     function test_Constructor_RevertWhen_METHZeroAddress() public {
         vm.prank(owner);
         vm.expectRevert(Faucet.Faucet__InvalidAddress.selector);
-        new Faucet(address(0), address(mBTC));
+        new Faucet(address(0), address(mBTC), address(mUSDC));
     }
 
     /// @notice Test constructor reverts when mBTC is zero address
     function test_Constructor_RevertWhen_MBTCZeroAddress() public {
         vm.prank(owner);
         vm.expectRevert(Faucet.Faucet__InvalidAddress.selector);
-        new Faucet(address(mETH), address(0));
+        new Faucet(address(mETH), address(0), address(mUSDC));
+    }
+
+    /// @notice Test constructor reverts when mUSDC is zero address
+    function test_Constructor_RevertWhen_MUSDCZeroAddress() public {
+        vm.prank(owner);
+        vm.expectRevert(Faucet.Faucet__InvalidAddress.selector);
+        new Faucet(address(mETH), address(mBTC), address(0));
     }
 
     // ============================================================
@@ -149,11 +162,24 @@ contract FaucetTest is Test {
         assertEq(mBTC.balanceOf(user), CLAIM_AMOUNT);
     }
 
+    /// @notice Test user can claim all three tokens
+    function test_ClaimToken_ClaimAllThreeTokens() public {
+        vm.startPrank(user);
+        faucet.claimToken(0);
+        faucet.claimToken(1);
+        faucet.claimToken(2);
+        vm.stopPrank();
+
+        assertEq(mETH.balanceOf(user), CLAIM_AMOUNT);
+        assertEq(mBTC.balanceOf(user), CLAIM_AMOUNT);
+        assertEq(mUSDC.balanceOf(user), CLAIM_AMOUNT);
+    }
+
     /// @notice Test claimToken reverts with invalid token index
     function test_ClaimToken_RevertWhen_InvalidToken() public {
         vm.prank(user);
         vm.expectRevert(Faucet.Faucet__InvalidToken.selector);
-        faucet.claimToken(2);
+        faucet.claimToken(3);
     }
 
     /// @notice Test claimToken reverts with out-of-bounds index
@@ -268,21 +294,24 @@ contract FaucetTest is Test {
     /// @notice Test getClaimInfo reverts with invalid token
     function test_GetClaimInfo_RevertWhen_InvalidToken() public {
         vm.expectRevert(Faucet.Faucet__InvalidToken.selector);
-        faucet.getClaimInfo(user, 2);
+        faucet.getClaimInfo(user, 3);
     }
 
-    /// @notice Test getClaimInfo tracks lifetime claimed for both tokens
-    function test_GetClaimInfo_LifetimeClaimedBothTokens() public {
+    /// @notice Test getClaimInfo tracks lifetime claimed for all three tokens
+    function test_GetClaimInfo_LifetimeClaimedAllTokens() public {
         vm.startPrank(user);
         faucet.claimToken(0);
         faucet.claimToken(1);
+        faucet.claimToken(2);
         vm.stopPrank();
 
         (, , uint256 totalETH, ) = faucet.getClaimInfo(user, 0);
         (, , uint256 totalBTC, ) = faucet.getClaimInfo(user, 1);
+        (, , uint256 totalUSDC, ) = faucet.getClaimInfo(user, 2);
 
         assertEq(totalETH, CLAIM_AMOUNT);
         assertEq(totalBTC, CLAIM_AMOUNT);
+        assertEq(totalUSDC, CLAIM_AMOUNT);
     }
 
     /// @notice Test getClaimInfo tracks lifetime claimed across multiple claims
@@ -303,21 +332,22 @@ contract FaucetTest is Test {
     // getTokenCount / getTokenAddress Tests
     // ============================================================
 
-    /// @notice Test getTokenCount returns 2
+    /// @notice Test getTokenCount returns 3
     function test_GetTokenCount() public view {
-        assertEq(faucet.getTokenCount(), 2);
+        assertEq(faucet.getTokenCount(), 3);
     }
 
     /// @notice Test getTokenAddress returns correct addresses
     function test_GetTokenAddress() public view {
         assertEq(faucet.getTokenAddress(0), address(mETH));
         assertEq(faucet.getTokenAddress(1), address(mBTC));
+        assertEq(faucet.getTokenAddress(2), address(mUSDC));
     }
 
     /// @notice Test getTokenAddress reverts for invalid index
     function test_GetTokenAddress_RevertWhen_InvalidToken() public {
         vm.expectRevert(Faucet.Faucet__InvalidToken.selector);
-        faucet.getTokenAddress(2);
+        faucet.getTokenAddress(3);
     }
 
     // ============================================================
