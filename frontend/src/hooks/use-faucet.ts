@@ -197,24 +197,23 @@ export function formatRelativeTime(unixTimestamp: number): string {
 }
 
 /**
- * Formats seconds into a human-readable countdown.
- * e.g. 3661 -> "1h 1m 1s"
+ * Formats seconds into a HH:MM:SS countdown timer.
+ * e.g. 86400 -> "24:00:00"
+ *      86399 -> "23:59:59"
+ *      3661  -> "01:01:01"
  */
 export function formatCountdown(seconds: number): string {
   if (seconds <= 0) return "Available now";
 
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
+  const totalHours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
 
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days}d`);
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0) parts.push(`${minutes}m`);
-  if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
+  const hh = totalHours.toString().padStart(2, "0");
+  const mm = minutes.toString().padStart(2, "0");
+  const ss = secs.toString().padStart(2, "0");
 
-  return parts.join(" ");
+  return `${hh}:${mm}:${ss}`;
 }
 
 /**

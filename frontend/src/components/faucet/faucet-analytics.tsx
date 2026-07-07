@@ -63,7 +63,24 @@ export function FaucetAnalytics({ tokenIndex }: FaucetAnalyticsProps) {
   const isReady = claimInfo.canClaim;
   const countdownText = isReady
     ? "Available now"
-    : formatCountdown(claimInfo.timeRemaining);
+    : `Next claim in ${formatCountdown(claimInfo.timeRemaining)}`;
+
+  // Don't show amber "Cooldown" while loading — show skeleton instead
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-5 animate-pulse">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-3 w-16 rounded bg-muted" />
+          <div className="h-7 w-7 rounded-lg bg-muted" />
+        </div>
+        <div className="h-5 w-36 rounded bg-muted mb-3" />
+        <div className="space-y-2">
+          <div className="h-3 w-24 rounded bg-muted" />
+          <div className="h-3 w-28 rounded bg-muted" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
@@ -77,71 +94,61 @@ export function FaucetAnalytics({ tokenIndex }: FaucetAnalyticsProps) {
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          <div className="h-8 w-24 rounded bg-muted animate-pulse" />
-          <div className="h-3 w-32 rounded bg-muted animate-pulse" />
-          <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+      {/* Status + Countdown */}
+      <div className="mb-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
+              isReady
+                ? "bg-emerald-500/10 text-emerald-500"
+                : "bg-amber-500/10 text-amber-500",
+            )}
+          >
+            <span
+              className={cn(
+                "h-1.5 w-1.5 rounded-full",
+                isReady ? "bg-emerald-500" : "bg-amber-500",
+              )}
+            />
+            {isReady ? "Ready" : "Cooldown"}
+          </span>
         </div>
-      ) : (
-        <>
-          {/* Status + Countdown */}
-          <div className="mb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
-                  isReady
-                    ? "bg-emerald-500/10 text-emerald-500"
-                    : "bg-amber-500/10 text-amber-500",
-                )}
-              >
-                <span
-                  className={cn(
-                    "h-1.5 w-1.5 rounded-full",
-                    isReady ? "bg-emerald-500" : "bg-amber-500",
-                  )}
-                />
-                {isReady ? "Ready" : "Cooldown"}
-              </span>
-              <span className="text-lg font-bold tabular-nums tracking-tight">
-                {countdownText}
-              </span>
-            </div>
-          </div>
+        <div className={cn("text-lg font-bold tabular-nums tracking-tight", isReady ? "text-emerald-500" : "text-amber-500")}>
+          {countdownText}
+        </div>
+      </div>
 
-          {/* Stats */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Droplet className="h-3 w-3" />
-                Claimed
-              </span>
-              <span className="font-medium tabular-nums">
-                {formatClaimedAmount(claimInfo.totalClaimed, meta.symbol)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Last
-              </span>
-              <span className="font-medium tabular-nums">
-                {formatRelativeTime(claimInfo.lastClaimTime)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground flex items-center gap-1">
-                <Timer className="h-3 w-3" />
-                Cooldown
-              </span>
-              <span className={cn("font-medium tabular-nums", isReady ? "text-emerald-500" : "text-amber-500")}>
-                {countdownText}
-              </span>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Stats */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Droplet className="h-3 w-3" />
+            Claimed
+          </span>
+          <span className="font-medium tabular-nums">
+            {formatClaimedAmount(claimInfo.totalClaimed, meta.symbol)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Last
+          </span>
+          <span className="font-medium tabular-nums">
+            {formatRelativeTime(claimInfo.lastClaimTime)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Timer className="h-3 w-3" />
+            Next in
+          </span>
+          <span className={cn("font-medium tabular-nums", isReady ? "text-emerald-500" : "text-amber-500")}>
+            {isReady ? "Now" : formatCountdown(claimInfo.timeRemaining)}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
