@@ -148,12 +148,52 @@ export function useTokenAddress(tokenIndex: number) {
 }
 
 /**
- * Formats a unix timestamp as a relative time string.
+ * Formats a BigInt with 18 decimals to a human-readable string.
+ * Example: 10500000000000000000n -> "10.5"
  */
-export function formatTimestamp(timestamp: number): string {
-  if (timestamp === 0) return "Never";
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleString();
+export function formatTokenBalance(value: bigint): string {
+  const divisor = 10n ** 18n;
+  const integerPart = value / divisor;
+  const remainder = value % divisor;
+
+  if (remainder === 0n) return integerPart.toString();
+
+  const decimalPart = remainder.toString().padStart(18, "0").slice(0, 4);
+  const trimmedDecimal = decimalPart.replace(/0+$/, "");
+
+  if (trimmedDecimal.length === 0) return integerPart.toString();
+  return `${integerPart.toString()}.${trimmedDecimal}`;
+}
+
+/**
+ * Formats a unix timestamp as a relative time string.
+ * e.g. 0 -> "Never"
+ *      now - 300 -> "5 min ago"
+ *      now - 7200 -> "2 hours ago"
+ */
+export function formatRelativeTime(unixTimestamp: number): string {
+  if (unixTimestamp === 0) return "Never";
+
+  const now = Math.floor(Date.now() / 1000);
+  const diff = now - unixTimestamp;
+
+  if (diff < 0) return "Just now";
+  if (diff < 60) return "Just now";
+  if (diff < 3600) {
+    const mins = Math.floor(diff / 60);
+    return `${mins} min${mins > 1 ? "s" : ""} ago`;
+  }
+  if (diff < 86400) {
+    const hours = Math.floor(diff / 3600);
+    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  }
+  if (diff < 604800) {
+    const days = Math.floor(diff / 86400);
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+  }
+
+  const date = new Date(unixTimestamp * 1000);
+  return date.toLocaleDateString();
 }
 
 /**
@@ -175,4 +215,14 @@ export function formatCountdown(seconds: number): string {
   if (secs > 0 || parts.length === 0) parts.push(`${secs}s`);
 
   return parts.join(" ");
+}
+
+/**
+ * Formats a BigInt claimed amount with token symbol.
+ * e.g. 10000000000000000000n, "mETH" -> "10 mETH"
+ */
+export function formatClaimedAmount(amount: bigint, symbol: string): string {
+  if (amount === 0n) return `0 ${symbol}`;
+  const formatted = formatTokenBalance(amount);
+  return `${formatted} ${symbol}`;
 }

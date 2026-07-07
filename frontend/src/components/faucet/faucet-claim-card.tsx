@@ -18,9 +18,10 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Droplet, Copy, Check, Loader2, Wallet } from "lucide-react";
 import { useTokenBalances, type TokenBalance } from "@/hooks/use-token-balances";
-import { useClaimInfo, useClaimTokens, useTokenAddress, formatCountdown } from "@/hooks/use-faucet";
+import { useClaimInfo, useClaimTokens, useTokenAddress, formatCountdown, formatClaimedAmount } from "@/hooks/use-faucet";
 import { CONTRACT_ADDRESSES, FAUCET_COOLDOWN } from "@/lib/constants";
 
 /** Token definitions for the faucet */
@@ -57,27 +58,27 @@ export function FaucetClaimCard() {
     : 100;
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
-      <CardHeader>
+    <Card className="w-full border-border bg-card shadow-sm">
+      <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Droplet className="h-5 w-5 text-blue-500" />
               Faucet
             </CardTitle>
-            <CardDescription>
-              Claim mock tokens once per day
+            <CardDescription className="text-xs">
+              Claim 10 tokens per claim, once every 24 hours
             </CardDescription>
           </div>
           {claimInfo.totalClaimed > 0n && (
-            <Badge variant="secondary" className="text-xs">
-              {claimInfo.totalClaimed.toString()} claimed
+            <Badge variant="secondary" className="text-[10px]">
+              {formatClaimedAmount(claimInfo.totalClaimed, tokenConfig.symbol)} total
             </Badge>
           )}
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-5">
         {/* ── Token Selector Tabs ── */}
         <Tabs value={selectedToken} onValueChange={setSelectedToken} className="w-full">
           <TabsList className="grid grid-cols-3 w-full">
@@ -114,19 +115,30 @@ export function FaucetClaimCard() {
           ))}
         </Tabs>
 
-        {/* ── Cooldown Progress ── */}
-        {!claimInfo.canClaim && claimInfo.lastClaimTime > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Cooldown</span>
-              <span className="font-medium">{formatCountdown(claimInfo.timeRemaining)}</span>
-            </div>
-            <Progress value={Math.max(0, Math.min(100, cooldownProgress))} className="h-2" />
+        {/* ── Cooldown Progress ── always visible */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">
+              {claimInfo.canClaim ? "Status" : "Cooldown"}
+            </span>
+            <span className={cn(
+              "font-medium tabular-nums",
+              claimInfo.canClaim ? "text-emerald-500" : "text-amber-500"
+            )}>
+              {claimInfo.canClaim
+                ? "✅ Ready to claim"
+                : claimInfo.lastClaimTime === 0
+                  ? "Checking..."
+                  : formatCountdown(claimInfo.timeRemaining)}
+            </span>
           </div>
-        )}
+          {!claimInfo.canClaim && claimInfo.lastClaimTime > 0 && (
+            <Progress value={Math.max(0, Math.min(100, cooldownProgress))} className="h-2" />
+          )}
+        </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-3">
+      <CardFooter className="flex flex-col gap-3 pt-0">
         {/* ── Claim Button ── */}
         {!isConnected ? (
           <p className="text-sm text-muted-foreground text-center w-full">
@@ -137,7 +149,7 @@ export function FaucetClaimCard() {
             Deploy contracts first via <code className="text-xs bg-secondary px-1 rounded">make deploy-anvil</code>
           </p>
         ) : isLoadingClaim ? (
-          <Button disabled className="w-full">
+          <Button disabled className="w-full h-11 text-sm font-semibold">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Checking eligibility...
           </Button>
@@ -145,7 +157,7 @@ export function FaucetClaimCard() {
           <Button
             onClick={() => claimTokens(tokenIndex)}
             disabled={isPending || isConfirming}
-            className="w-full"
+            className="w-full h-11 text-sm font-semibold"
             size="lg"
           >
             {isPending ? (
@@ -161,12 +173,12 @@ export function FaucetClaimCard() {
             ) : (
               <>
                 <Droplet className="mr-2 h-4 w-4" />
-                Claim {tokenConfig.symbol}
+                Claim 10 {tokenConfig.symbol}
               </>
             )}
           </Button>
         ) : (
-          <Button disabled className="w-full" variant="secondary" size="lg">
+          <Button disabled className="w-full h-11 text-sm font-semibold" variant="secondary" size="lg">
             {claimInfo.lastClaimTime === 0
               ? "Checking..."
               : `Next claim in ${formatCountdown(claimInfo.timeRemaining)}`}

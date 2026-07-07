@@ -1,119 +1,147 @@
 "use client";
 
 /**
- * FaucetAnalytics — Displays detailed analytics about faucet usage.
+ * FaucetAnalytics — Token analytics card matching the AnalyticsStatsCards style.
  *
  * Shows:
- * - Lifetime tokens claimed
- * - Last claim timestamp
- * - Cooldown remaining
- * - Claim status
+ * - Token icon with colored background
+ * - Lifetime claimed (formatted)
+ * - Last claim (relative time)
+ * - Live countdown timer
  */
 import { useAccount } from "wagmi";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Droplet, History, Timer } from "lucide-react";
-import { useClaimInfo, formatTimestamp, formatCountdown } from "@/hooks/use-faucet";
+import { cn } from "@/lib/utils";
+import { useClaimInfo, formatRelativeTime, formatCountdown, formatClaimedAmount } from "@/hooks/use-faucet";
+import { Droplet, Clock, Timer } from "lucide-react";
 
 interface FaucetAnalyticsProps {
   tokenIndex: number;
 }
 
+const TOKEN_META = [
+  {
+    symbol: "mETH",
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    iconBg: "bg-blue-500/15",
+  },
+  {
+    symbol: "mBTC",
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    iconBg: "bg-orange-500/15",
+  },
+  {
+    symbol: "mUSDC",
+    color: "text-blue-600",
+    bgColor: "bg-blue-600/10",
+    iconBg: "bg-blue-600/15",
+  },
+];
+
 export function FaucetAnalytics({ tokenIndex }: FaucetAnalyticsProps) {
   const { isConnected } = useAccount();
   const { claimInfo, isLoading } = useClaimInfo(tokenIndex);
-
-  const tokenNames = ["mETH", "mBTC", "mUSDC"];
-  const tokenColors = ["text-blue-500", "text-orange-500", "text-blue-600"];
-  const tokenName = tokenIndex < tokenNames.length ? tokenNames[tokenIndex] : "Unknown";
-  const tokenColor = tokenIndex < tokenColors.length ? tokenColors[tokenIndex] : "text-muted-foreground";
+  const meta = TOKEN_META[tokenIndex] ?? TOKEN_META[0];
 
   if (!isConnected) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Analytics
-          </CardTitle>
-          <CardDescription>
-            Connect your wallet to see faucet analytics
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="rounded-xl border border-border bg-card p-5 transition-all hover:shadow-md duration-200">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+            {meta.symbol}
+          </span>
+          <div className={cn("p-1.5 rounded-lg", meta.iconBg)}>
+            <Droplet className={cn("h-4 w-4", meta.color)} />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">Connect wallet to see stats</p>
+      </div>
     );
   }
 
-  const statItems = [
-    {
-      label: "Lifetime Claimed",
-      value: claimInfo.totalClaimed > 0n
-        ? `${claimInfo.totalClaimed.toString()} ${tokenName}`
-        : "0 tokens",
-      icon: Droplet,
-      color: tokenColor,
-    },
-    {
-      label: "Last Claim",
-      value: formatTimestamp(claimInfo.lastClaimTime),
-      icon: Clock,
-      color: "text-muted-foreground",
-    },
-    {
-      label: "Cooldown Remaining",
-      value: claimInfo.canClaim
-        ? "None — Ready to claim!"
-        : formatCountdown(claimInfo.timeRemaining),
-      icon: Timer,
-      color: claimInfo.canClaim ? "text-emerald-500" : "text-amber-500",
-    },
-  ];
+  const isReady = claimInfo.canClaim;
+  const countdownText = isReady
+    ? "Available now"
+    : formatCountdown(claimInfo.timeRemaining);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Analytics
-          </CardTitle>
-          <CardDescription>
-            Your faucet usage for {tokenName}
-          </CardDescription>
+    <div className="rounded-xl border border-border bg-card p-5 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+      {/* Header: Token + Icon */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+          {meta.symbol}
+        </span>
+        <div className={cn("p-1.5 rounded-lg", meta.iconBg)}>
+          <Droplet className={cn("h-4 w-4", meta.color)} />
         </div>
-        <Badge
-          variant={claimInfo.canClaim ? "default" : "secondary"}
-          className={claimInfo.canClaim ? "bg-emerald-600" : ""}
-        >
-          {claimInfo.canClaim ? "Claim Ready" : "On Cooldown"}
-        </Badge>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-12 rounded-lg bg-secondary/30 animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {statItems.map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between p-3 rounded-lg bg-secondary/20"
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          <div className="h-8 w-24 rounded bg-muted animate-pulse" />
+          <div className="h-3 w-32 rounded bg-muted animate-pulse" />
+          <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+        </div>
+      ) : (
+        <>
+          {/* Status + Countdown */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
+                  isReady
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : "bg-amber-500/10 text-amber-500",
+                )}
               >
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <item.icon className={`h-4 w-4 ${item.color}`} />
-                  {item.label}
-                </div>
-                <span className="text-sm font-medium tabular-nums text-right max-w-[60%]">
-                  {item.value}
-                </span>
-              </div>
-            ))}
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    isReady ? "bg-emerald-500" : "bg-amber-500",
+                  )}
+                />
+                {isReady ? "Ready" : "Cooldown"}
+              </span>
+              <span className="text-lg font-bold tabular-nums tracking-tight">
+                {countdownText}
+              </span>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Stats */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Droplet className="h-3 w-3" />
+                Claimed
+              </span>
+              <span className="font-medium tabular-nums">
+                {formatClaimedAmount(claimInfo.totalClaimed, meta.symbol)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Last
+              </span>
+              <span className="font-medium tabular-nums">
+                {formatRelativeTime(claimInfo.lastClaimTime)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Timer className="h-3 w-3" />
+                Cooldown
+              </span>
+              <span className={cn("font-medium tabular-nums", isReady ? "text-emerald-500" : "text-amber-500")}>
+                {countdownText}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

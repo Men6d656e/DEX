@@ -189,6 +189,9 @@ export function SwapCard() {
   const { swap, isPending, isConfirming, isConfirmed, hash: swapHash } =
     useSwap();
 
+  // Local success state for auto-reset
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const handleSwap = useCallback(() => {
     swap({
       fromToken: fromSymbol,
@@ -198,11 +201,16 @@ export function SwapCard() {
     });
   }, [swap, fromSymbol, toSymbol, amountInParsed, minOutput]);
 
-  // Reset form after successful swap
+  // ── Auto-reset after successful swap (3 second delay) ──
   useEffect(() => {
     if (isConfirmed) {
-      setFromAmount("");
-      setApprovalState("idle");
+      setShowSuccess(true);
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+        setFromAmount("");
+        setApprovalState("idle");
+      }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [isConfirmed]);
 
@@ -228,12 +236,12 @@ export function SwapCard() {
     if (!hasSufficientBalance) return `Insufficient ${fromSymbol} Balance`;
     if (needsApproval && approvalState === "idle") return `Approve ${fromSymbol}`;
     if (isApprovePending || isApproveConfirming) return "Approving...";
-    if (approvalState === "approved" && !isPending && !isConfirming) {
+    if (approvalState === "approved" && !isPending && !isConfirming && !showSuccess) {
       return "Swap Tokens";
     }
     if (isPending) return "Confirm in Wallet...";
     if (isConfirming) return "Swapping...";
-    if (isConfirmed) return "Swapped ✓";
+    if (showSuccess) return "Swapped ✓";
     return "Swap Tokens";
   };
 
@@ -243,7 +251,7 @@ export function SwapCard() {
     if (isLoading) return true;
     if (!isAmountValid) return true;
     if (!hasSufficientBalance) return true;
-    if (isPending || isConfirming || isConfirmed) return true;
+    if (isPending || isConfirming || showSuccess) return true;
     if (isApprovePending || isApproveConfirming) return true;
     if (needsApproval && approvalState === "idle") return false;
     return false;
@@ -358,18 +366,18 @@ export function SwapCard() {
                     setFromAmount(val);
                   }
                 }}
-                className="border-0 bg-transparent p-0 text-right text-lg font-medium tabular-nums shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/50"
+                className="border-0 bg-transparent p-0 text-left text-lg font-medium tabular-nums shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/50"
                 aria-label={`Amount of ${fromSymbol} to swap`}
               />
-              {fromBalance && amountInParsed > 0n && (
-                <button
-                  onClick={setMaxAmount}
-                  className="absolute -bottom-4 right-0 text-[10px] text-blue-500 hover:text-blue-400 transition-colors"
-                >
-                  Max
-                </button>
-              )}
             </div>
+            {fromBalance && (
+              <button
+                onClick={setMaxAmount}
+                className="shrink-0 text-xs font-semibold text-blue-500 hover:text-blue-400 transition-colors px-1.5 py-0.5 rounded hover:bg-blue-500/10"
+              >
+                MAX
+              </button>
+            )}
           </div>
         </div>
 
@@ -425,7 +433,7 @@ export function SwapCard() {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <div className="flex-1 text-right text-lg font-medium tabular-nums text-muted-foreground">
+            <div className="flex-1 text-left text-lg font-medium tabular-nums text-muted-foreground">
               {expectedOutput > 0n
                 ? formatDexBalance(expectedOutput)
                 : "0.0"}
