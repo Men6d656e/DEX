@@ -57,7 +57,7 @@ export function useClaimInfo(tokenIndex: number) {
   const [liveTimeRemaining, setLiveTimeRemaining] = useState(0);
 
   useEffect(() => {
-    if (!data || !data[0]) {
+    if (!data || data[0]) {
       // data[0] = canClaim; if canClaim is true, timeRemaining should be 0
       setLiveTimeRemaining(0);
       return;
