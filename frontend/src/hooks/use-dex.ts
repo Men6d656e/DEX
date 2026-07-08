@@ -175,6 +175,24 @@ export function useSwap(): SwapState {
           args: [amountIn, minOut],
         });
       }
+      // mETH → mBTC (cross-rate via USDC)
+      else if (fromToken === "mETH" && toToken === "mBTC") {
+        writeContract({
+          address: CONTRACT_ADDRESSES.dex,
+          abi: DEX_ABI,
+          functionName: "swapETHForBTC",
+          args: [amountIn, minOut],
+        });
+      }
+      // mBTC → mETH (cross-rate via USDC)
+      else if (fromToken === "mBTC" && toToken === "mETH") {
+        writeContract({
+          address: CONTRACT_ADDRESSES.dex,
+          abi: DEX_ABI,
+          functionName: "swapBTCForETH",
+          args: [amountIn, minOut],
+        });
+      }
     },
     [writeContract],
   );
@@ -308,6 +326,32 @@ export function getSwapInfo(
       isSellingAsset: false,
       fromReserve: usdcReserve,
       toReserve: btcReserve,
+    };
+  }
+  // mETH → mBTC (cross-rate via USDC)
+  if (fromSymbol === "mETH" && toSymbol === "mBTC") {
+    const crossRate =
+      ethSwapRate && btcSwapRate && btcSwapRate !== 0n
+        ? (ethSwapRate * 10n ** 18n) / btcSwapRate
+        : undefined;
+    return {
+      rate: crossRate,
+      isSellingAsset: true,
+      fromReserve: ethReserve,
+      toReserve: btcReserve,
+    };
+  }
+  // mBTC → mETH (cross-rate via USDC)
+  if (fromSymbol === "mBTC" && toSymbol === "mETH") {
+    const crossRate =
+      btcSwapRate && ethSwapRate && ethSwapRate !== 0n
+        ? (btcSwapRate * 10n ** 18n) / ethSwapRate
+        : undefined;
+    return {
+      rate: crossRate,
+      isSellingAsset: true,
+      fromReserve: btcReserve,
+      toReserve: ethReserve,
     };
   }
   return {

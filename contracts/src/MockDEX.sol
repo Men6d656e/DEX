@@ -356,6 +356,92 @@ contract MockDEX is Ownable {
     }
 
     /**
+     * @notice Swaps mETH for mBTC using cross-rate derivation.
+     * @dev Calculates output by routing through mUSDC:
+     *      usdcValue = ethAmount * ethSwapRate / 1e18
+     *      btcOutput = usdcValue * 1e18 / btcSwapRate
+     *
+     * @param ethAmount Amount of mETH to sell
+     * @param minBTC Minimum amount of mBTC to receive (slippage protection)
+     *
+     * Requirements:
+     * - `ethAmount` must be non-zero
+     * - Contract must have sufficient mBTC reserves
+     * - Actual output must be >= `minBTC`
+     */
+    function swapETHForBTC(uint256 ethAmount, uint256 minBTC) external {
+        if (ethAmount == 0) revert MockDEX__ZeroAmount();
+
+        // Route through mUSDC: ETH→USDC value → BTC
+        uint256 usdcValue = (ethAmount * ethSwapRate) / 1e18;
+        uint256 btcOutput = (usdcValue * 1e18) / btcSwapRate;
+
+        if (btcOutput > btcReserve) revert MockDEX__InsufficientLiquidity();
+        if (btcOutput < minBTC) {
+            revert MockDEX__SlippageExceeded(btcOutput, minBTC);
+        }
+
+        // ── Effects ──
+        ethReserve += ethAmount;
+        btcReserve -= btcOutput;
+
+        // ── Interactions ──
+        mETH.safeTransferFrom(msg.sender, address(this), ethAmount);
+        mBTC.safeTransfer(msg.sender, btcOutput);
+
+        emit Swapped(
+            msg.sender,
+            address(mETH),
+            address(mBTC),
+            ethAmount,
+            btcOutput
+        );
+    }
+
+    /**
+     * @notice Swaps mBTC for mETH using cross-rate derivation.
+     * @dev Calculates output by routing through mUSDC:
+     *      usdcValue = btcAmount * btcSwapRate / 1e18
+     *      ethOutput = usdcValue * 1e18 / ethSwapRate
+     *
+     * @param btcAmount Amount of mBTC to sell
+     * @param minETH Minimum amount of mETH to receive (slippage protection)
+     *
+     * Requirements:
+     * - `btcAmount` must be non-zero
+     * - Contract must have sufficient mETH reserves
+     * - Actual output must be >= `minETH`
+     */
+    function swapBTCForETH(uint256 btcAmount, uint256 minETH) external {
+        if (btcAmount == 0) revert MockDEX__ZeroAmount();
+
+        // Route through mUSDC: BTC→USDC value → ETH
+        uint256 usdcValue = (btcAmount * btcSwapRate) / 1e18;
+        uint256 ethOutput = (usdcValue * 1e18) / ethSwapRate;
+
+        if (ethOutput > ethReserve) revert MockDEX__InsufficientLiquidity();
+        if (ethOutput < minETH) {
+            revert MockDEX__SlippageExceeded(ethOutput, minETH);
+        }
+
+        // ── Effects ──
+        btcReserve += btcAmount;
+        ethReserve -= ethOutput;
+
+        // ── Interactions ──
+        mBTC.safeTransferFrom(msg.sender, address(this), btcAmount);
+        mETH.safeTransfer(msg.sender, ethOutput);
+
+        emit Swapped(
+            msg.sender,
+            address(mBTC),
+            address(mETH),
+            btcAmount,
+            ethOutput
+        );
+    }
+
+    /**
      * @notice Returns the current mETH→mUSDC swap rate.
      * @return The current rate (mUSDC per 1 mETH, scaled by 1e18)
      */

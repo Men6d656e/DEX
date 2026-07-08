@@ -130,6 +130,26 @@ export const DEX_ABI = [
     outputs: [],
     stateMutability: "nonpayable",
   },
+  {
+    type: "function",
+    name: "swapETHForBTC",
+    inputs: [
+      { name: "ethAmount", type: "uint256", internalType: "uint256" },
+      { name: "minBTC", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "swapBTCForETH",
+    inputs: [
+      { name: "btcAmount", type: "uint256", internalType: "uint256" },
+      { name: "minETH", type: "uint256", internalType: "uint256" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
 
   // ── Events ──
   {
