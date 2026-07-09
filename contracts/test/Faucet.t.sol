@@ -506,4 +506,262 @@ contract FaucetTest is Test {
         );
         faucet.claimToken(0);
     }
+
+    /// @notice Test claim with different amounts after setClaimAmount
+    function test_EdgeCase_DifferentClaimAmounts() public {
+        uint256 newAmount = 25 * 10 ** 18;
+
+        vm.prank(owner);
+        faucet.setClaimAmount(newAmount);
+
+        vm.prank(user);
+        faucet.claimToken(0);
+        assertEq(mETH.balanceOf(user), newAmount);
+
+        // Verify lifetime claimed uses new amount
+        (, , uint256 totalClaimed, ) = faucet.getClaimInfo(user, 0);
+        assertEq(totalClaimed, newAmount);
+    }
+
+    /// @notice Test claim after changing cooldown mid-cycle
+    function test_EdgeCase_CooldownChangedMidCycle() public {
+        uint256 newCooldown = 1 hours;
+
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        // Owner reduces cooldown
+        vm.prank(owner);
+        faucet.setCooldown(newCooldown);
+
+        // Fast forward by new cooldown (but less than old cooldown)
+        vm.warp(block.timestamp + newCooldown);
+
+        // Should be able to claim because cooldown is now 1 hour
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        assertEq(mETH.balanceOf(user), CLAIM_AMOUNT * 2);
+    }
+
+    /// @notice Test claim at exact cooldown boundary (not a second before)
+    function test_EdgeCase_CooldownExactBoundary() public {
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        // Warp to exactly cooldown period minus 1 second
+        vm.warp(block.timestamp + COOLDOWN - 1);
+
+        vm.prank(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Faucet.Faucet__CooldownNotElapsed.selector,
+                1
+            )
+        );
+        faucet.claimToken(0);
+    }
+
+    /// @notice Test claim after multiple full cooldown cycles
+    function test_EdgeCase_MultipleCooldownCycles() public {
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        for (uint256 i = 0; i < 5; i++) {
+            vm.warp(block.timestamp + COOLDOWN);
+            vm.prank(user);
+            faucet.claimToken(0);
+        }
+
+        assertEq(mETH.balanceOf(user), CLAIM_AMOUNT * 6);
+        (, , uint256 totalClaimed, ) = faucet.getClaimInfo(user, 0);
+        assertEq(totalClaimed, CLAIM_AMOUNT * 6);
+    }
+
+    /// @notice Test claim on behalf of another user (cannot claim for others)
+    function test_EdgeCase_CannotClaimForOthers() public {
+        address user2 = makeAddr("user2");
+
+        vm.prank(user2);
+        faucet.claimToken(0);
+
+        // user should NOT be affected by user2's claim
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        assertEq(mETH.balanceOf(user), CLAIM_AMOUNT);
+        assertEq(mETH.balanceOf(user2), CLAIM_AMOUNT);
+    }
+
+    /// @notice Test owner can withdraw tokens from faucet (by minting to self)
+    /// Actually the faucet mints, not holds, so no withdrawal needed.
+    /// But test that owner can still mint directly (by setting self as faucet)
+    function test_EdgeCase_OwnerCanStillMintDirectly() public {
+        // Owner temporarily sets self as faucet
+        vm.prank(owner);
+        mETH.setFaucet(owner);
+
+        vm.prank(owner);
+        mETH.mint(user, 100 * 10 ** 18);
+
+        assertEq(mETH.balanceOf(user), 100 * 10 ** 18);
+
+        // Restore faucet
+        vm.prank(owner);
+        mETH.setFaucet(address(faucet));
+    }
+
+    /// @notice Test getClaimInfo for a user that has never claimed
+    function test_GetClaimInfo_NeverClaimed() public {
+        (bool canClaim, uint256 timeRemaining, uint256 totalClaimed, uint256 lastClaimTime) =
+            faucet.getClaimInfo(user, 0);
+
+        assertTrue(canClaim);
+        assertEq(timeRemaining, 0);
+        assertEq(totalClaimed, 0);
+        assertEq(lastClaimTime, 0);
+    }
+
+    // ============================================================
+    // Fuzz Tests — Faucet
+    // ============================================================
+
+    /// @notice Fuzz test: claim always gives exactly claimAmount tokens
+    /// @param claimAmount_ Claim amount to set (bounded to reasonable range)
+    function testFuzz_ClaimAmount_AlwaysMatches(
+        uint256 claimAmount_
+    ) public {
+        claimAmount_ = bound(claimAmount_, 1, 1_000_000 * 10 ** 18);
+
+        vm.prank(owner);
+        faucet.setClaimAmount(claimAmount_);
+
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        assertEq(mETH.balanceOf(user), claimAmount_);
+        (, , uint256 totalClaimed, ) = faucet.getClaimInfo(user, 0);
+        assertEq(totalClaimed, claimAmount_);
+    }
+
+    /// @notice Fuzz test: time remaining after partial cooldown is correct
+    /// @param timeElapsed Time elapsed since claim (bounded to 0..COOLDOWN)
+    function testFuzz_TimeRemaining_AfterPartialCooldown(
+        uint256 timeElapsed
+    ) public {
+        timeElapsed = bound(timeElapsed, 0, COOLDOWN);
+
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        vm.warp(block.timestamp + timeElapsed);
+
+        (bool canClaim, uint256 timeRemaining, , ) = faucet.getClaimInfo(user, 0);
+
+        if (timeElapsed >= COOLDOWN) {
+            assertTrue(canClaim);
+            assertEq(timeRemaining, 0);
+        } else {
+            assertFalse(canClaim);
+            assertEq(timeRemaining, COOLDOWN - timeElapsed);
+        }
+    }
+
+    /// @notice Fuzz test: different users have independent claim states
+    /// @param claimDelay Delay between user1's and user2's claim
+    function testFuzz_IndependentUsers_IndependentClaims(
+        uint256 claimDelay
+    ) public {
+        claimDelay = bound(claimDelay, 0, COOLDOWN);
+        address user2 = makeAddr("user2");
+
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        vm.warp(block.timestamp + claimDelay);
+
+        vm.prank(user2);
+        faucet.claimToken(0);
+
+        // Both should have their claim tokens
+        assertEq(mETH.balanceOf(user), CLAIM_AMOUNT);
+        assertEq(mETH.balanceOf(user2), CLAIM_AMOUNT);
+
+        // user1's remaining cooldown should be COOLDOWN - claimDelay
+        uint256 user1Remaining = COOLDOWN > claimDelay ? COOLDOWN - claimDelay : 0;
+        (, uint256 timeRemaining1, , ) = faucet.getClaimInfo(user, 0);
+        assertEq(timeRemaining1, user1Remaining);
+
+        // user2 just claimed, so their cooldown starts now — should be full COOLDOWN
+        (, uint256 timeRemaining2, , ) = faucet.getClaimInfo(user2, 0);
+        assertEq(timeRemaining2, COOLDOWN);
+    }
+
+    /// @notice Fuzz test: cooldown period always prevents immediate re-claim
+    /// @param cooldown_ Cooldown period to set (bounded to reasonable range)
+    function testFuzz_Cooldown_AlwaysEnforced(
+        uint256 cooldown_
+    ) public {
+        cooldown_ = bound(cooldown_, 1, 365 days);
+
+        // Warp to a time well beyond the cooldown so the first claim succeeds
+        // (lastClaim starts at 0, so nextAllowed = 0 + cooldown_, and block.timestamp must be >= cooldown_)
+        vm.warp(cooldown_ + 1000);
+
+        vm.prank(owner);
+        faucet.setCooldown(cooldown_);
+
+        vm.prank(user);
+        faucet.claimToken(0);
+
+        // Try claiming immediately after — should always revert with full cooldown remaining
+        vm.prank(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Faucet.Faucet__CooldownNotElapsed.selector,
+                cooldown_
+            )
+        );
+        faucet.claimToken(0);
+    }
+
+    /// @notice Fuzz test: getClaimInfo returns valid data for all token indices
+    /// @param tokenIndex Token index (bounded to 0..2)
+    function testFuzz_GetClaimInfo_AllTokenIndices(
+        uint256 tokenIndex
+    ) public {
+        tokenIndex = bound(tokenIndex, 0, 2);
+
+        vm.prank(user);
+        faucet.claimToken(tokenIndex);
+
+        (bool canClaim, uint256 timeRemaining, uint256 totalClaimed, ) =
+            faucet.getClaimInfo(user, tokenIndex);
+
+        assertFalse(canClaim);
+        assertEq(timeRemaining, COOLDOWN);
+        assertEq(totalClaimed, CLAIM_AMOUNT);
+    }
+
+    /// @notice Fuzz test: token balances match claim amount after multiple claims across cycles
+    /// @param cycles Number of full cooldown cycles (bounded)
+    function testFuzz_MultipleCycles_AccumulatesCorrectly(
+        uint256 cycles
+    ) public {
+        cycles = bound(cycles, 1, 10);
+
+        for (uint256 i = 0; i < cycles; i++) {
+            vm.prank(user);
+            faucet.claimToken(0);
+
+            if (i < cycles - 1) {
+                vm.warp(block.timestamp + COOLDOWN);
+            }
+        }
+
+        assertEq(mETH.balanceOf(user), CLAIM_AMOUNT * cycles);
+
+        (, , uint256 totalClaimed, ) = faucet.getClaimInfo(user, 0);
+        assertEq(totalClaimed, CLAIM_AMOUNT * cycles);
+    }
 }

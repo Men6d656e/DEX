@@ -709,6 +709,449 @@ contract MockDEXTest is Test {
     }
 
     // ============================================================
+    // swapETHForBTC Tests
+    // ============================================================
+
+    /// @notice Test successful swap ETH for BTC
+    function test_SwapETHForBTC() public {
+        uint256 swapAmount = 10 * 10 ** 18; // 10 mETH
+        uint256 usdcValue = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        vm.expectEmit(true, true, true, true);
+        emit Swapped(user, address(mETH), address(mBTC), swapAmount, expectedBtc);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+        assertEq(dex.ethReserve(), LIQUIDITY_ETH + swapAmount);
+        assertEq(dex.btcReserve(), LIQUIDITY_BTC - expectedBtc);
+    }
+
+    /// @notice Test swapETHForBTC with exact minimum output
+    function test_SwapETHForBTC_WithMinOutput() public {
+        uint256 swapAmount = 10 * 10 ** 18;
+        uint256 usdcValue = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, expectedBtc);
+
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+    }
+
+    /// @notice Test swapETHForBTC reverts with slippage exceeded
+    function test_SwapETHForBTC_RevertWhen_SlippageExceeded() public {
+        uint256 swapAmount = 10 * 10 ** 18;
+        uint256 usdcValue = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MockDEX.MockDEX__SlippageExceeded.selector,
+                expectedBtc,
+                expectedBtc + 1
+            )
+        );
+        dex.swapETHForBTC(swapAmount, expectedBtc + 1);
+    }
+
+    /// @notice Test swapETHForBTC reverts with zero amount
+    function test_SwapETHForBTC_RevertWhen_ZeroAmount() public {
+        vm.prank(user);
+        vm.expectRevert(MockDEX.MockDEX__ZeroAmount.selector);
+        dex.swapETHForBTC(0, 0);
+    }
+
+    /// @notice Test swapETHForBTC reverts with insufficient BTC liquidity
+    function test_SwapETHForBTC_RevertWhen_InsufficientLiquidity() public {
+        // Swap 200 ETH — this would require ~8.5 BTC at current rates (1700/40000)
+        // but we only have 5 BTC in reserve, so it exceeds BTC reserves
+        uint256 ethAmount = 200 * 10 ** 18;
+
+        vm.prank(owner);
+        mETH.mint(user, ethAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), ethAmount);
+
+        vm.prank(user);
+        vm.expectRevert(MockDEX.MockDEX__InsufficientLiquidity.selector);
+        dex.swapETHForBTC(ethAmount, 0);
+    }
+
+    /// @notice Test swapETHForBTC with very small amounts (rounding edge case)
+    function test_SwapETHForBTC_SmallAmount() public {
+        uint256 swapAmount = 1; // 1 wei of mETH
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        uint256 usdcValue = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+        // For 1 wei of mETH: expected Btc = 0 (floor rounding), which is fine
+    }
+
+    // ============================================================
+    // swapBTCForETH Tests
+    // ============================================================
+
+    /// @notice Test successful swap BTC for ETH
+    function test_SwapBTCForETH() public {
+        uint256 swapAmount = 1 * 10 ** 18; // 1 mBTC
+        uint256 usdcValue = (swapAmount * INITIAL_BTC_RATE) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        vm.expectEmit(true, true, true, true);
+        emit Swapped(user, address(mBTC), address(mETH), swapAmount, expectedEth);
+        dex.swapBTCForETH(swapAmount, 0);
+
+        assertEq(mETH.balanceOf(user), expectedEth);
+        assertEq(dex.btcReserve(), LIQUIDITY_BTC + swapAmount);
+        assertEq(dex.ethReserve(), LIQUIDITY_ETH - expectedEth);
+    }
+
+    /// @notice Test swapBTCForETH with exact minimum output
+    function test_SwapBTCForETH_WithMinOutput() public {
+        uint256 swapAmount = 1 * 10 ** 18;
+        uint256 usdcValue = (swapAmount * INITIAL_BTC_RATE) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapBTCForETH(swapAmount, expectedEth);
+
+        assertEq(mETH.balanceOf(user), expectedEth);
+    }
+
+    /// @notice Test swapBTCForETH reverts with slippage exceeded
+    function test_SwapBTCForETH_RevertWhen_SlippageExceeded() public {
+        uint256 swapAmount = 1 * 10 ** 18;
+        uint256 usdcValue = (swapAmount * INITIAL_BTC_RATE) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MockDEX.MockDEX__SlippageExceeded.selector,
+                expectedEth,
+                expectedEth + 1
+            )
+        );
+        dex.swapBTCForETH(swapAmount, expectedEth + 1);
+    }
+
+    /// @notice Test swapBTCForETH reverts with zero amount
+    function test_SwapBTCForETH_RevertWhen_ZeroAmount() public {
+        vm.prank(user);
+        vm.expectRevert(MockDEX.MockDEX__ZeroAmount.selector);
+        dex.swapBTCForETH(0, 0);
+    }
+
+    /// @notice Test swapBTCForETH reverts with insufficient ETH liquidity
+    function test_SwapBTCForETH_RevertWhen_InsufficientLiquidity() public {
+        // Swap amount that exceeds ETH reserves
+        uint256 maxBtcAmount = (LIQUIDITY_ETH * INITIAL_ETH_RATE * 1e18) / (1e18 * INITIAL_BTC_RATE);
+        uint256 btcAmount = maxBtcAmount + 1;
+
+        vm.prank(owner);
+        mBTC.mint(user, btcAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), btcAmount);
+
+        vm.prank(user);
+        vm.expectRevert(MockDEX.MockDEX__InsufficientLiquidity.selector);
+        dex.swapBTCForETH(btcAmount, 0);
+    }
+
+    /// @notice Test swapBTCForETH with very small amounts (rounding edge case)
+    function test_SwapBTCForETH_SmallAmount() public {
+        uint256 swapAmount = 1; // 1 wei of mBTC
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapBTCForETH(swapAmount, 0);
+
+        uint256 usdcValue = (swapAmount * INITIAL_BTC_RATE) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+        assertEq(mETH.balanceOf(user), expectedEth);
+        // For 1 wei of mBTC: expected Eth = 0, which is fine
+    }
+
+    // ============================================================
+    // Cross-Rate Mathematical Verification Tests
+    // ============================================================
+
+    /// @notice Verify cross-rate: ETH→BTC output matches manual calculation
+    function test_CrossRate_ETHtoBTC_MatchesMath() public {
+        uint256 swapAmount = 42 * 10 ** 18; // 42 mETH
+
+        // Manual calculation
+        uint256 usdcValue = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        // Verify: 42 mETH * 1700 USDC/ETH = 71400 USDC
+        assertEq(usdcValue, 71400 * 10 ** 18);
+        // 71400 USDC / 40000 USDC/BTC = 1.785 BTC
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+        assertEq(expectedBtc, (71400 * 10 ** 18 * 1e18) / (40000 * 10 ** 18));
+    }
+
+    /// @notice Verify cross-rate: BTC→ETH output matches manual calculation
+    function test_CrossRate_BTCtoETH_MatchesMath() public {
+        uint256 swapAmount = 2 * 10 ** 18; // 2 mBTC
+
+        // Manual calculation
+        uint256 usdcValue = (swapAmount * INITIAL_BTC_RATE) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapBTCForETH(swapAmount, 0);
+
+        // Verify: 2 mBTC * 40000 USDC/BTC = 80000 USDC
+        assertEq(usdcValue, 80000 * 10 ** 18);
+        // 80000 USDC / 1700 USDC/ETH = 47.058823529411764706 ETH
+        assertEq(mETH.balanceOf(user), expectedEth);
+    }
+
+    // ============================================================
+    // Round-Trip Tests
+    // ============================================================
+
+    /// @notice Test round-trip ETH→BTC→ETH returns approximately original amount
+    function test_RoundTrip_ETHtoBTCtoETH() public {
+        uint256 swapAmount = 10 * 10 ** 18; // 10 mETH
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), type(uint256).max);
+
+        // ETH → BTC
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        uint256 btcReceived = mBTC.balanceOf(user);
+        assertGt(btcReceived, 0);
+
+        // BTC → ETH
+        vm.prank(user);
+        mBTC.approve(address(dex), btcReceived);
+
+        vm.prank(user);
+        dex.swapBTCForETH(btcReceived, 0);
+
+        uint256 ethReceived = mETH.balanceOf(user);
+        // Due to fixed rounding in both directions, should be approx equal
+        assertApproxEqAbs(ethReceived, swapAmount, 1);
+    }
+
+    /// @notice Test round-trip BTC→ETH→BTC returns approximately original amount
+    function test_RoundTrip_BTCtoETHtoBTC() public {
+        uint256 swapAmount = 1 * 10 ** 18; // 1 mBTC
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), type(uint256).max);
+
+        // BTC → ETH
+        vm.prank(user);
+        dex.swapBTCForETH(swapAmount, 0);
+
+        uint256 ethReceived = mETH.balanceOf(user);
+        assertGt(ethReceived, 0);
+
+        // ETH → BTC
+        vm.prank(user);
+        mETH.approve(address(dex), ethReceived);
+
+        vm.prank(user);
+        dex.swapETHForBTC(ethReceived, 0);
+
+        uint256 btcReceived = mBTC.balanceOf(user);
+        assertApproxEqAbs(btcReceived, swapAmount, 1);
+    }
+
+    /// @notice Test round-trip ETH→USDC→BTC→USDC→ETH (full cross-rate cycle)
+    function test_RoundTrip_FullCrossRateCycle() public {
+        uint256 swapAmount = 10 * 10 ** 18; // 10 mETH
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+        vm.prank(user);
+        mETH.approve(address(dex), type(uint256).max);
+        vm.prank(user);
+        mUSDC.approve(address(dex), type(uint256).max);
+        vm.prank(user);
+        mBTC.approve(address(dex), type(uint256).max);
+
+        // ETH → USDC
+        vm.prank(user);
+        dex.swapETHForUSDC(swapAmount, 0);
+        uint256 usdcReceived = mUSDC.balanceOf(user);
+        assertGt(usdcReceived, 0);
+
+        // USDC → BTC
+        vm.prank(user);
+        dex.swapUSDCForBTC(usdcReceived, 0);
+        uint256 btcReceived = mBTC.balanceOf(user);
+        assertGt(btcReceived, 0);
+
+        // BTC → USDC
+        vm.prank(user);
+        dex.swapBTCForUSDC(btcReceived, 0);
+        uint256 usdcReceived2 = mUSDC.balanceOf(user);
+        assertGt(usdcReceived2, 0);
+
+        // USDC → ETH
+        vm.prank(user);
+        dex.swapUSDCForETH(usdcReceived2, 0);
+
+        uint256 ethReceived = mETH.balanceOf(user);
+        // Should be very close to original due to fixed-rate model
+        assertApproxEqAbs(ethReceived, swapAmount, 1);
+    }
+
+    // ============================================================
+    // Rate Update Effect on Cross-Rate Swaps
+    // ============================================================
+
+    /// @notice Test swapETHForBTC uses updated ETH rate
+    function test_RateUpdate_ETHtoBTC_UsesNewEthRate() public {
+        uint256 newEthRate = 2000 * 10 ** 18; // 1 mETH = 2000 mUSDC
+        vm.prank(owner);
+        dex.setEthRate(newEthRate);
+
+        uint256 swapAmount = 10 * 10 ** 18;
+        uint256 usdcValue = (swapAmount * newEthRate) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+    }
+
+    /// @notice Test swapBTCForETH uses updated BTC rate
+    function test_RateUpdate_BTCtoETH_UsesNewBtcRate() public {
+        uint256 newBtcRate = 45000 * 10 ** 18; // 1 mBTC = 45000 mUSDC
+        vm.prank(owner);
+        dex.setBtcRate(newBtcRate);
+
+        uint256 swapAmount = 1 * 10 ** 18;
+        uint256 usdcValue = (swapAmount * newBtcRate) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapBTCForETH(swapAmount, 0);
+
+        assertEq(mETH.balanceOf(user), expectedEth);
+    }
+
+    /// @notice Test both rates can be updated and affect cross-rate
+    function test_RateUpdate_BothRatesAffectCrossRate() public {
+        uint256 newEthRate = 2000 * 10 ** 18;
+        uint256 newBtcRate = 45000 * 10 ** 18;
+
+        vm.prank(owner);
+        dex.setEthRate(newEthRate);
+        vm.prank(owner);
+        dex.setBtcRate(newBtcRate);
+
+        uint256 swapAmount = 10 * 10 ** 18;
+        uint256 usdcValue = (swapAmount * newEthRate) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / newBtcRate;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+    }
+
+    // ============================================================
     // Edge Cases
     // ============================================================
 
@@ -996,5 +1439,111 @@ contract MockDEXTest is Test {
 
         assertEq(dex.btcReserve(), btcBefore - expectedOutput);
         assertEq(dex.usdcReserve(), usdcBefore + swapAmount);
+    }
+
+    // ============================================================
+    // Fuzz Tests — ETH↔BTC Cross-Rate Pairs
+    // ============================================================
+
+    /// @notice Fuzz test: swapETHForBTC output matches cross-rate calculation
+    /// @param swapAmount The amount of mETH to swap (bounded by BTC reserves)
+    function testFuzz_SwapETHForBTC_OutputMatchesCrossRate(
+        uint256 swapAmount
+    ) public {
+        // Bound so BTC output doesn't exceed reserves
+        uint256 maxEth = (LIQUIDITY_BTC * INITIAL_BTC_RATE * 1e18) / (1e18 * INITIAL_ETH_RATE);
+        swapAmount = bound(swapAmount, 1, maxEth);
+
+        uint256 usdcValue = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+    }
+
+    /// @notice Fuzz test: swapBTCForETH output matches cross-rate calculation
+    /// @param swapAmount The amount of mBTC to swap (bounded by ETH reserves)
+    function testFuzz_SwapBTCForETH_OutputMatchesCrossRate(
+        uint256 swapAmount
+    ) public {
+        // Bound so ETH output doesn't exceed reserves
+        uint256 maxBtc = (LIQUIDITY_ETH * INITIAL_ETH_RATE * 1e18) / (1e18 * INITIAL_BTC_RATE);
+        swapAmount = bound(swapAmount, 1, maxBtc);
+
+        uint256 usdcValue = (swapAmount * INITIAL_BTC_RATE) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        vm.prank(user);
+        dex.swapBTCForETH(swapAmount, 0);
+
+        assertEq(mETH.balanceOf(user), expectedEth);
+    }
+
+    /// @notice Fuzz test: reserves update correctly after ETH→BTC swap
+    /// @param swapAmount The amount of mETH to swap
+    function testFuzz_SwapETHForBTC_ReservesUpdate(
+        uint256 swapAmount
+    ) public {
+        uint256 maxEth = (LIQUIDITY_BTC * INITIAL_BTC_RATE * 1e18) / (1e18 * INITIAL_ETH_RATE);
+        swapAmount = bound(swapAmount, 1, maxEth);
+
+        uint256 usdcValue = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        uint256 expectedBtc = (usdcValue * 1e18) / INITIAL_BTC_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        uint256 ethBefore = dex.ethReserve();
+        uint256 btcBefore = dex.btcReserve();
+
+        vm.prank(user);
+        dex.swapETHForBTC(swapAmount, 0);
+
+        assertEq(dex.ethReserve(), ethBefore + swapAmount);
+        assertEq(dex.btcReserve(), btcBefore - expectedBtc);
+    }
+
+    /// @notice Fuzz test: reserves update correctly after BTC→ETH swap
+    /// @param swapAmount The amount of mBTC to swap
+    function testFuzz_SwapBTCForETH_ReservesUpdate(
+        uint256 swapAmount
+    ) public {
+        uint256 maxBtc = (LIQUIDITY_ETH * INITIAL_ETH_RATE * 1e18) / (1e18 * INITIAL_BTC_RATE);
+        swapAmount = bound(swapAmount, 1, maxBtc);
+
+        uint256 usdcValue = (swapAmount * INITIAL_BTC_RATE) / 1e18;
+        uint256 expectedEth = (usdcValue * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        mBTC.approve(address(dex), swapAmount);
+
+        uint256 btcBefore = dex.btcReserve();
+        uint256 ethBefore = dex.ethReserve();
+
+        vm.prank(user);
+        dex.swapBTCForETH(swapAmount, 0);
+
+        assertEq(dex.btcReserve(), btcBefore + swapAmount);
+        assertEq(dex.ethReserve(), ethBefore - expectedEth);
     }
 }
