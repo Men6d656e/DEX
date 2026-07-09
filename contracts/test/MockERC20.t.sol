@@ -40,6 +40,11 @@ contract MockERC20Test is Test {
         address indexed previousOwner,
         address indexed newOwner
     );
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 
     // ============================================================
     // Setup
@@ -356,6 +361,50 @@ contract MockERC20Test is Test {
         vm.prank(user);
         vm.expectRevert();
         token.transfer(address(0), amount);
+    }
+
+    /// @notice Test approve emits Approval event with correct values
+    function test_ERC20_Approve_EmitsEvent() public {
+        address spender = makeAddr("spender");
+        uint256 amount = 500 * 10 ** 18;
+
+        vm.prank(user);
+        vm.expectEmit(true, true, true, true);
+        emit Approval(user, spender, amount);
+        token.approve(spender, amount);
+
+        assertEq(token.allowance(user, spender), amount);
+    }
+
+    /// @notice Test approve with zero amount (valid)
+    function test_ERC20_Approve_ZeroAmount() public {
+        address spender = makeAddr("spender");
+        address other = makeAddr("other");
+
+        // Set a non-zero approval first
+        vm.prank(user);
+        token.approve(spender, 100);
+
+        // Then set to zero
+        vm.prank(user);
+        vm.expectEmit(true, true, true, true);
+        emit Approval(user, spender, 0);
+        token.approve(spender, 0);
+
+        assertEq(token.allowance(user, spender), 0);
+    }
+
+    /// @notice Test approve can increase allowance (ERC20 standard)
+    function test_ERC20_Approve_IncreaseAllowance() public {
+        address spender = makeAddr("spender");
+
+        vm.prank(user);
+        token.approve(spender, 100);
+
+        vm.prank(user);
+        token.approve(spender, 200);
+
+        assertEq(token.allowance(user, spender), 200);
     }
 
     // ============================================================

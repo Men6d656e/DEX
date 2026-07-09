@@ -1546,4 +1546,140 @@ contract MockDEXTest is Test {
         assertEq(dex.btcReserve(), btcBefore + swapAmount);
         assertEq(dex.ethReserve(), ethBefore - expectedEth);
     }
+
+    // ============================================================
+    // Authorization Guard Tests
+    // ============================================================
+
+    /// @notice Test swapETHForUSDC reverts when user has not approved
+    function test_Authorization_SwapETHForUSDC_WithoutApproval() public {
+        uint256 swapAmount = 1 * 10 ** 18;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        // User has balance but NO approval
+        vm.prank(user);
+        vm.expectRevert(); // ERC20InsufficientAllowance
+        dex.swapETHForUSDC(swapAmount, 0);
+    }
+
+    /// @notice Test swapETHForBTC reverts when user has not approved
+    function test_Authorization_SwapETHForBTC_WithoutApproval() public {
+        uint256 swapAmount = 10 * 10 ** 18;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+
+        vm.prank(user);
+        vm.expectRevert();
+        dex.swapETHForBTC(swapAmount, 0);
+    }
+
+    /// @notice Test swapBTCForETH reverts when user has not approved
+    function test_Authorization_SwapBTCForETH_WithoutApproval() public {
+        uint256 swapAmount = 1 * 10 ** 18;
+
+        vm.prank(owner);
+        mBTC.mint(user, swapAmount);
+
+        vm.prank(user);
+        vm.expectRevert();
+        dex.swapBTCForETH(swapAmount, 0);
+    }
+
+    /// @notice Test swapUSDCForETH reverts when user has not approved
+    function test_Authorization_SwapUSDCForETH_WithoutApproval() public {
+        uint256 swapAmount = 1700 * 10 ** 18;
+
+        vm.prank(owner);
+        mUSDC.mint(user, swapAmount);
+
+        vm.prank(user);
+        vm.expectRevert();
+        dex.swapUSDCForETH(swapAmount, 0);
+    }
+
+    /// @notice Test swap reverts when user has balance but NO approval (cross-rate)
+    function test_Authorization_SwapUSDCForBTC_WithoutApproval() public {
+        uint256 swapAmount = 40000 * 10 ** 18;
+
+        vm.prank(owner);
+        mUSDC.mint(user, swapAmount);
+
+        vm.prank(user);
+        vm.expectRevert();
+        dex.swapUSDCForBTC(swapAmount, 0);
+    }
+
+    // ============================================================
+    // Reserve Drain Tests
+    // ============================================================
+
+    /// @notice Test draining most of the USDC reserve via ETH→USDC
+    /// @dev Floor division in swap calculation leaves 1 token of dust.
+    ///      Uses the max integer swap amount that doesn't exceed USDC reserves.
+    function test_ReserveDrain_DrainAllUSDC_WithETH() public {
+        // Max ETH that can be swapped without exceeding USDC reserve:
+        // ethAmount = usdcReserve * 1e18 / ethRate (floor)
+        // This produces output = floor(ethAmt * rate / 1e18) <= usdcReserve
+        uint256 swapAmount = (LIQUIDITY_USDC * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(owner);
+        mETH.mint(user, swapAmount);
+        vm.prank(user);
+        mETH.approve(address(dex), swapAmount);
+
+        uint256 usdcBefore = dex.usdcReserve();
+
+        vm.prank(user);
+        dex.swapETHForUSDC(swapAmount, 0);
+
+        uint256 output = (swapAmount * INITIAL_ETH_RATE) / 1e18;
+        assertEq(mUSDC.balanceOf(user), output);
+        // Reserve decreased by output amount; may leave 1 token dust due to floor
+        assertEq(dex.usdcReserve(), usdcBefore - output);
+        // Verify we drained nearly everything (dust <= 1 wei-worth)
+        assertLt(dex.usdcReserve(), 1e18);
+    }
+
+    /// @notice Test draining entire ETH reserve via USDC→ETH
+    function test_ReserveDrain_DrainAllETH_WithUSDC() public {
+        // Calculate USDC needed to drain all ETH: usdcAmt * 1e18 / rate = ethReserve
+        uint256 swapAmount = (LIQUIDITY_ETH * INITIAL_ETH_RATE) / 1e18;
+
+        vm.prank(owner);
+        mUSDC.mint(user, swapAmount);
+        vm.prank(user);
+        mUSDC.approve(address(dex), swapAmount);
+
+        uint256 expectedOutput = (swapAmount * 1e18) / INITIAL_ETH_RATE;
+
+        vm.prank(user);
+        dex.swapUSDCForETH(swapAmount, 0);
+
+        assertEq(dex.ethReserve(), 0);
+        assertEq(mETH.balanceOf(user), expectedOutput);
+    }
+
+    /// @notice Test draining entire BTC reserve via ETH→BTC
+    function test_ReserveDrain_DrainAllBTC_WithETH() public {
+        // Calculate ETH needed to drain all BTC via cross-rate
+        // Add 1 to handle double floor division rounding down
+        uint256 usdcValueFromBtc = LIQUIDITY_BTC * INITIAL_BTC_RATE / 1e18;
+        uint256 ethAmount = ((usdcValueFromBtc * 1e18) / INITIAL_ETH_RATE) + 1;
+
+        vm.prank(owner);
+        mETH.mint(user, ethAmount);
+        vm.prank(user);
+        mETH.approve(address(dex), ethAmount);
+
+        uint256 expectedBtc = LIQUIDITY_BTC;
+
+        vm.prank(user);
+        dex.swapETHForBTC(ethAmount, 0);
+
+        assertEq(dex.btcReserve(), 0);
+        assertEq(mBTC.balanceOf(user), expectedBtc);
+    }
 }
