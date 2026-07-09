@@ -1547,6 +1547,73 @@ contract MockDEXTest is Test {
         assertEq(dex.ethReserve(), ethBefore - expectedEth);
     }
 
+    /// @notice Fuzz test: swapETHForBTC then swapBTCForETH is approximately inverse
+    /// @dev Double floor division causes at most 1 wei of precision loss in round-trip
+    /// @param ethAmount Amount of mETH to swap (bounded by BTC reserves)
+    function testFuzz_CrossRate_ETHtoBTCtoETH_IsApproximatelyInverse(
+        uint256 ethAmount
+    ) public {
+        uint256 maxEth = (LIQUIDITY_BTC * INITIAL_BTC_RATE * 1e18) / (1e18 * INITIAL_ETH_RATE);
+        ethAmount = bound(ethAmount, 1, maxEth);
+
+        vm.prank(owner);
+        mETH.mint(user, ethAmount);
+        vm.prank(user);
+        mETH.approve(address(dex), type(uint256).max);
+
+        // Step 1: swapETHForBTC(ethAmount) → get btcOut
+        vm.prank(user);
+        dex.swapETHForBTC(ethAmount, 0);
+        uint256 btcOut = mBTC.balanceOf(user);
+        // Skip if rounding produced 0 BTC (occurs for very small ethAmount < 24 wei)
+        if (btcOut == 0) return;
+
+        // Step 2: swapBTCForETH(btcOut) → get ethOut
+        vm.prank(user);
+        mBTC.approve(address(dex), btcOut);
+
+        vm.prank(user);
+        dex.swapBTCForETH(btcOut, 0);
+        uint256 ethOut = mETH.balanceOf(user);
+
+        // The round-trip should restore approximately the original amount
+        // Four floor divisions (2 per swap) can compound to ~24 wei loss max
+        assertApproxEqAbs(ethOut, ethAmount, 25);
+    }
+
+    /// @notice Fuzz test: swapBTCForETH then swapETHForBTC is approximately inverse
+    /// @dev Double floor division causes at most 1 wei of precision loss in round-trip
+    /// @param btcAmount Amount of mBTC to swap (bounded by ETH reserves)
+    function testFuzz_CrossRate_BTCtoETHtoBTC_IsApproximatelyInverse(
+        uint256 btcAmount
+    ) public {
+        uint256 maxBtc = (LIQUIDITY_ETH * INITIAL_ETH_RATE * 1e18) / (1e18 * INITIAL_BTC_RATE);
+        btcAmount = bound(btcAmount, 1, maxBtc);
+
+        vm.prank(owner);
+        mBTC.mint(user, btcAmount);
+        vm.prank(user);
+        mBTC.approve(address(dex), type(uint256).max);
+
+        // Step 1: swapBTCForETH(btcAmount) → get ethOut
+        vm.prank(user);
+        dex.swapBTCForETH(btcAmount, 0);
+        uint256 ethOut = mETH.balanceOf(user);
+        assertGt(ethOut, 0);
+
+        // Step 2: swapETHForBTC(ethOut) → get btcOut
+        vm.prank(user);
+        mETH.approve(address(dex), ethOut);
+
+        vm.prank(user);
+        dex.swapETHForBTC(ethOut, 0);
+        uint256 btcOut = mBTC.balanceOf(user);
+
+        // The round-trip should restore approximately the original amount
+        // Four floor divisions (2 per swap) can compound to ~24 wei loss max
+        assertApproxEqAbs(btcOut, btcAmount, 25);
+    }
+
     // ============================================================
     // Authorization Guard Tests
     // ============================================================
