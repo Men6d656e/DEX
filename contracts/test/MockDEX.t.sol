@@ -1682,4 +1682,84 @@ contract MockDEXTest is Test {
         assertEq(dex.btcReserve(), 0);
         assertEq(mBTC.balanceOf(user), expectedBtc);
     }
+
+    // ============================================================
+    // Fuzz Tests — addLiquidity
+    // ============================================================
+
+    /// @notice Fuzz test: addLiquidity always updates reserves and balances correctly
+    /// @param addEth Amount of mETH to add
+    /// @param addBtc Amount of mBTC to add
+    /// @param addUsdc Amount of mUSDC to add
+    function testFuzz_AddLiquidity_ReservesAndBalancesUpdate(
+        uint256 addEth,
+        uint256 addBtc,
+        uint256 addUsdc
+    ) public {
+        // Bound amounts to available owner balances (after setUp's initial liquidity)
+        addEth = bound(addEth, 0, LIQUIDITY_ETH);
+        addBtc = bound(addBtc, 0, LIQUIDITY_BTC);
+        addUsdc = bound(addUsdc, 0, LIQUIDITY_USDC);
+
+        // Must have at least one non-zero amount
+        if (addEth == 0 && addBtc == 0 && addUsdc == 0) return;
+
+        uint256 ethBefore = dex.ethReserve();
+        uint256 btcBefore = dex.btcReserve();
+        uint256 usdcBefore = dex.usdcReserve();
+
+        uint256 ownerEthBefore = mETH.balanceOf(owner);
+        uint256 ownerBtcBefore = mBTC.balanceOf(owner);
+        uint256 ownerUsdcBefore = mUSDC.balanceOf(owner);
+
+        uint256 dexEthBefore = mETH.balanceOf(address(dex));
+        uint256 dexBtcBefore = mBTC.balanceOf(address(dex));
+        uint256 dexUsdcBefore = mUSDC.balanceOf(address(dex));
+
+        vm.prank(owner);
+        dex.addLiquidity(addEth, addBtc, addUsdc);
+
+        // Reserves increase by exactly the amounts added
+        assertEq(dex.ethReserve(), ethBefore + addEth);
+        assertEq(dex.btcReserve(), btcBefore + addBtc);
+        assertEq(dex.usdcReserve(), usdcBefore + addUsdc);
+
+        // Owner's balance decreased by amounts added
+        assertEq(mETH.balanceOf(owner), ownerEthBefore - addEth);
+        assertEq(mBTC.balanceOf(owner), ownerBtcBefore - addBtc);
+        assertEq(mUSDC.balanceOf(owner), ownerUsdcBefore - addUsdc);
+
+        // DEX balance increased by amounts added
+        assertEq(mETH.balanceOf(address(dex)), dexEthBefore + addEth);
+        assertEq(mBTC.balanceOf(address(dex)), dexBtcBefore + addBtc);
+        assertEq(mUSDC.balanceOf(address(dex)), dexUsdcBefore + addUsdc);
+    }
+
+    /// @notice Fuzz test: addLiquidity only affects specified tokens
+    /// @param addEth Amount of mETH to add (may be 0)
+    /// @param addBtc Amount of mBTC to add (may be 0)
+    function testFuzz_AddLiquidity_OnlySpecifiedTokensAffected(
+        uint256 addEth,
+        uint256 addBtc
+    ) public {
+        addEth = bound(addEth, 0, LIQUIDITY_ETH);
+        addBtc = bound(addBtc, 0, LIQUIDITY_BTC);
+
+        // Must have at least one non-zero
+        if (addEth == 0 && addBtc == 0) return;
+
+        uint256 ethBefore = dex.ethReserve();
+        uint256 btcBefore = dex.btcReserve();
+        uint256 usdcBefore = dex.usdcReserve();
+
+        vm.prank(owner);
+        dex.addLiquidity(addEth, addBtc, 0);
+
+        // ETH and BTC reserves updated
+        assertEq(dex.ethReserve(), ethBefore + addEth);
+        assertEq(dex.btcReserve(), btcBefore + addBtc);
+        // USDC reserve UNCHANGED
+        assertEq(dex.usdcReserve(), usdcBefore);
+    }
 }
+
