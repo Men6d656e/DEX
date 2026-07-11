@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ — DEX Dashboard Documentation</title>
+  <meta name="description" content="Frequently asked questions about the DEX Dashboard — learn about the Faucet, Swap, Analytics, and more." />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    /* ── Accordion Styles ── */
+    .qa-hero {
+      padding: 3rem 0 2rem;
+      text-align: center;
+    }
+    .qa-hero h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .qa-hero p { color: var(--text-secondary); max-width: 600px; margin: 0 auto 1.5rem; }
+
+    /* Category filter tabs */
+    .qa-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2.5rem;
+    }
+    .qa-tab {
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .qa-tab:hover {
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+    }
+    .qa-tab.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    /* Section headings */
+    .qa-section {
+      margin-bottom: 3rem;
+      scroll-margin-top: 80px;
+    }
+    .qa-section h2 {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .qa-section h2 .section-icon { font-size: 1.5rem; }
+    .qa-section.hidden { display: none; }
+
+    /* Accordion details/summary */
+    .qa-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .qa-item:hover { border-color: var(--bg-hover); }
+    .qa-item[open] { border-color: var(--accent-blue); }
+
+    .qa-item summary {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      list-style: none;
+      user-select: none;
+    }
+    .qa-item summary::-webkit-details-marker { display: none; }
+    .qa-item summary::-moz-list-bullet { list-style: none; }
+
+    .qa-item summary .qa-toggle {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: var(--bg-hover);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .qa-item[open] summary .qa-toggle {
+      background: var(--accent-blue);
+      color: #fff;
+      transform: rotate(45deg);
+    }
+
+    .qa-answer {
+      padding: 0 1.25rem 1.25rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: 0.9rem;
+    }
+    .qa-answer p:last-child { margin-bottom: 0; }
+    .qa-answer ul, .qa-answer ol { margin-bottom: 0.75rem; }
+    .qa-answer li { margin-bottom: 0.35rem; }
+    .qa-answer code {
+      font-size: 0.85em;
+    }
+    .qa-answer strong {
+      color: var(--text-primary);
+    }
+    .qa-answer blockquote {
+      margin: 0.75rem 0;
+      font-size: 0.88rem;
+    }
+
+    /* Info badges within answers */
+    .qa-callout {
+      display: flex;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      align-items: flex-start;
+    }
+    .qa-callout-info {
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 3px solid var(--accent-blue);
+    }
+    .qa-callout-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 3px solid var(--accent-amber);
+    }
+    .qa-callout-success {
+      background: rgba(34, 197, 94, 0.1);
+      border-left: 3px solid var(--accent-emerald);
+    }
+    .qa-callout-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .qa-callout p { margin: 0; }
+
+    /* Search */
+    .qa-search {
+      max-width: 500px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+    }
+    .qa-search input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .qa-search input::placeholder { color: var(--text-muted); }
+    .qa-search input:focus { border-color: var(--accent-blue); }
+    .qa-search .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+    .qa-search .search-clear {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem;
+      display: none;
+    }
+    .qa-search .search-clear.visible { display: block; }
+    .qa-search .search-clear:hover { color: var(--text-primary); }
+
+    .qa-no-results {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    /* Count badge */
+    .qa-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    @media (max-width: 640px) {
+      .qa-hero h1 { font-size: 1.75rem; }
+      .qa-item summary { padding: 0.75rem 1rem; font-size: 0.9rem; }
+      .qa-answer { padding: 0 1rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="./" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="./">Home</a>
+        <a href="./user-guide/">User Guide</a>
+        <a href="./developer-guide/">Developer Guide</a>
+        <a href="./qa.html" class="active">FAQ</a>
+      </nav>
+      <button class="mobile-menu-btn" aria-label="Toggle menu">☰</button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="qa-hero">
+    <div class="container">
+      <h1><span class="gradient" style="background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Frequently Asked Questions</span></h1>
+      <p>Everything you need to know about using the DEX Dashboard — from claiming tokens to understanding the smart contracts.</p>
+
+      <!-- Search -->
+      <div class="qa-search">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="qaSearchInput" placeholder="Search questions..." autocomplete="off" />
+        <button class="search-clear" id="qaSearchClear" aria-label="Clear search">✕</button>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="qa-tabs">
+        <button class="qa-tab active" data-section="all">All</button>
+        <button class="qa-tab" data-section="about">About</button>
+        <button class="qa-tab" data-section="faucet">Faucet</button>
+        <button class="qa-tab" data-section="swap">Swap</button>
+        <button class="qa-tab" data-section="analytics">Analytics</button>
+        <button class="qa-tab" data-section="developer">Developer</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q&A Content -->
+  <div class="container">
+
+    <!-- ───── About Section ───── -->
+    <section class="qa-section" id="section-about" data-section="about">
+      <h2><span class="section-icon">ℹ️</span> About <span class="qa-count">(6)</span></h2>
+
+      <details class="qa-item" data-search="What is the DEX Dashboard?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What is the DEX Dashboard?
+        </summary>
+        <div class="qa-answer">
+          <p>The <strong>DEX Dashboard</strong> is a full-stack educational Web3 platform that simulates a decentralized exchange experience. It lets you mint mock tokens, trade them on a simulated DEX, and track live market analytics — all without risking real funds.</p>
+          <p>It's built for developers, students, and crypto enthusiasts who want to understand how DeFi protocols work by interacting with one directly.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>No real cryptocurrency or fiat money is involved. All tokens are mock ERC20 tokens deployed on test networks or a local Anvil node.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="What blockchain networks does it support?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What blockchain networks does it support?
+        </summary>
+        <div class="qa-answer">
+          <p>The DEX Dashboard works with <strong>two networks</strong>:</p>
+          <ul>
+            <li><strong>Anvil (Local)</strong> — A local Ethereum node provided by the Foundry toolchain. This is the default for development and testing. It runs on <code>http://127.0.0.1:8545</code> and gives you instant transactions with no gas costs.</li>
+            <li><strong>Sepolia (Testnet)</strong> — A public Ethereum testnet. You'll need test ETH from a Sepolia faucet to deploy contracts. The frontend automatically detects which network your wallet is connected to and shows the relevant contract addresses.</li>
+          </ul>
+          <blockquote>
+            <p>💡 <strong>Tip:</strong> Start with Anvil for local development, then deploy to Sepolia for public testing.</p>
+          </blockquote>
+          <div class="qa-callout qa-callout-warning">
+            <span class="qa-callout-icon">⚠️</span>
+            <p>Before deploying to Sepolia, make sure you have test ETH. You can get it from the Sepolia Faucet (sepoliafaucet.com).</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="Who is this project for?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          Who is this project for?
+        </summary>
+        <div class="qa-answer">
+          <p>This dashboard is designed for:</p>
+          <ul>
+            <li><strong>👨‍💻 Developers</strong> — Learn Solidity smart contract development, Foundry testing, and full-stack Web3 integration with Next.js and wagmi.</li>
+            <li><strong>🎓 Students</strong> — Understand DeFi mechanics like token swaps, liquidity pools, and market analytics in a safe sandbox environment.</li>
+            <li><strong>🧪 Crypto Enthusiasts</strong> — Explore how DEXes work under the hood without risking real assets.</li>
+            <li><strong>🏫 Educators</strong> — Use this as a teaching tool for blockchain development courses and workshops.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="What technology stack is used?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What technology stack is used?
+        </summary>
+        <div class="qa-answer">
+          <p>The project is divided into two main parts:</p>
+          <ul>
+            <li><strong>Smart Contracts (Backend):</strong> <code>Solidity ^0.8.27</code> + <code>Foundry</code> + <code>OpenZeppelin</code></li>
+            <li><strong>Frontend:</strong> <code>Next.js 16</code> (App Router) + <code>TypeScript</code> (strict) + <code>shadcn/ui</code> + <code>Tailwind CSS v4</code> + <code>wagmi</code> + <code>viem</code></li>
+            <li><strong>Charts & Data:</strong> <code>Recharts</code> for candlestick charts, <code>CoinGecko API</code> for market data</li>
+            <li><strong>Testing:</strong> <code>Foundry</code> (forge) — 182+ Solidity tests including fuzz and invariant tests; <code>Vitest</code> + <code>Testing Library</code> — frontend component tests</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How do I get started?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How do I get started?
+        </summary>
+        <div class="qa-answer">
+          <p>Follow these steps:</p>
+          <ol>
+            <li>Clone the repository: <code>git clone https://github.com/Men6d656e/DEX.git</code></li>
+            <li>Install dependencies: <code>make install</code></li>
+            <li>Build contracts: <code>make build-contracts</code></li>
+            <li>Start Anvil: <code>make anvil</code> (Terminal 1)</li>
+            <li>Deploy contracts: <code>make deploy-anvil</code> (Terminal 2)</li>
+            <li>Start the frontend: <code>make dev</code></li>
+            <li>Open <code>http://localhost:3000</code> and connect your wallet</li>
+          </ol>
+          <blockquote>
+            <p>💡 <strong>New to Foundry?</strong> The <code>make</code> commands automate everything. Just run <code>make dev</code> and the frontend will start with hot reload enabled.</p>
+          </blockquote>
+          <div class="qa-callout qa-callout-success">
+            <span class="qa-callout-icon">✅</span>
+            <p>Make sure you have Node.js &gt;= 18, Foundry, and Git installed before starting.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="What does the project structure look like?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What does the project structure look like?
+        </summary>
+        <div class="qa-answer">
+          <p>The repository is organized into these main directories:</p>
+          <ul>
+            <li><strong>contracts/</strong> — Foundry smart contracts (MockERC20, Faucet, MockDEX) with tests and deployment scripts.</li>
+            <li><strong>frontend/</strong> — Next.js 16 application with pages, components, hooks, and utilities.</li>
+            <li><strong>docs/</strong> — GitHub Pages documentation (this documentation hub).</li>
+            <li><strong>scripts/</strong> — Utility scripts like <code>update-addresses.sh</code> for auto-capturing deployed contract addresses.</li>
+          </ul>
+          <p>The root <code>Makefile</code> provides automation for install, build, test, deploy, and dev commands.</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- ───── Faucet Section ───── -->
+    <section class="qa-section" id="section-faucet" data-section="faucet">
+      <h2><span class="section-icon">💰</span> Faucet <span class="qa-count">(6)</span></h2>
+
+      <details class="qa-item" data-search="What is the Faucet?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What is the Faucet?
+        </summary>
+        <div class="qa-answer">
+          <p>The <strong>Faucet</strong> is a smart contract that distributes mock tokens to users for testing and learning purposes. It's like a water faucet for tokens — turn it on and get free tokens to play with.</p>
+          <p>Each user can claim a fixed amount of tokens once per <strong>cooldown period</strong> (24 hours), tracked independently for each token type. The faucet ensures fair distribution while preventing abuse.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>The Faucet contract uses a checks-effects-interactions pattern for security. Your claim is recorded on-chain before tokens are minted.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How many tokens does the Faucet support?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How many tokens does the Faucet support?
+        </summary>
+        <div class="qa-answer">
+          <p>The Faucet supports <strong>3 mock tokens</strong>:</p>
+          <ul>
+            <li><strong>Token Index 0 → mETH</strong> (Mock Ethereum): <code>MockERC20("Mock ETH", "mETH", faucetAddress)</code></li>
+            <li><strong>Token Index 1 → mBTC</strong> (Mock Bitcoin): <code>MockERC20("Mock BTC", "mBTC", faucetAddress)</code></li>
+            <li><strong>Token Index 2 → mUSDC</strong> (Mock USD Coin): <code>MockERC20("Mock USDC", "mUSDC", faucetAddress)</code></li>
+          </ul>
+          <p>Each token is a full ERC20 implementation from OpenZeppelin with faucet-restricted minting. The faucet is the only address that can mint new tokens.</p>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How do I import tokens into my wallet?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How do I import tokens into my wallet?
+        </summary>
+        <div class="qa-answer">
+          <p>When you select a token in the Faucet page, its <strong>contract address</strong> is displayed in the section below the claim button. To import a token into MetaMask (or any wallet):</p>
+          <ol>
+            <li>Copy the contract address shown on the Faucet page.</li>
+            <li>In MetaMask, click <strong>"Import tokens"</strong> (scroll to the bottom of your assets list).</li>
+            <li>Paste the contract address. MetaMask will auto-detect the symbol and decimals (18).</li>
+            <li>Click <strong>"Add Custom Token"</strong> then <strong>"Import Tokens"</strong>.</li>
+          </ol>
+          <blockquote>
+            <p>✅ After importing, you'll see your balance update in real-time as you claim more tokens.</p>
+          </blockquote>
+          <div class="qa-callout qa-callout-success">
+            <span class="qa-callout-icon">✅</span>
+            <p>Token addresses are unique per deployment. Always use the address shown on the Faucet page — they change when contracts are redeployed.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How does the cooldown system work?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How does the cooldown system work?
+        </summary>
+        <div class="qa-answer">
+          <p>Each token has an <strong>independent 24-hour cooldown</strong> per wallet address. Here's the breakdown:</p>
+          <ul>
+            <li><strong>Per token, per wallet</strong> — Claiming mETH doesn't reset your mBTC cooldown. You can claim all 3 tokens on the same day, just not the same token twice.</li>
+            <li><strong>Countdown timer</strong> — The UI shows an exact <code>HH:MM:SS</code> countdown until your next claim is available.</li>
+            <li><strong>Progress indicator</strong> — A circular progress bar shows how much of the cooldown has elapsed.</li>
+            <li><strong>State badges</strong> — The claim button shows "Claim Ready" (green) when available, or a disabled state with remaining time when on cooldown.</li>
+            <li><strong>On-chain tracking</strong> — The <code>lastClaim</code> mapping and <code>cooldown</code> variable are stored in the Faucet contract. Even if you reload the page, the state persists.</li>
+          </ul>
+          <div class="qa-callout qa-callout-warning">
+            <span class="qa-callout-icon">⚠️</span>
+            <p>The cooldown is based on block timestamps, not your local clock. If there's a discrepancy, trust the on-chain countdown displayed in the UI.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How many tokens can I claim per day?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How many tokens can I claim per day?
+        </summary>
+        <div class="qa-answer">
+          <p>You can claim <strong>10 tokens</strong> (with 18 decimal places, so <code>10 × 10¹⁸</code> wei) per token per 24-hour period.</p>
+          <p><strong>Example:</strong></p>
+          <ul>
+            <li>Day 1: Claim 10 mETH, claim 10 mBTC, claim 10 mUSDC = <strong>30 tokens total</strong></li>
+            <li>Day 2: Claim 10 mETH again (cooldown for mETH has reset)</li>
+          </ul>
+          <p>The claim amount and cooldown duration can be adjusted by the contract owner (the deployer) using the <code>setClaimAmount()</code> and <code>setCooldown()</code> admin functions.</p>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How do I track my claim history?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How do I track my claim history?
+        </summary>
+        <div class="qa-answer">
+          <p>The Faucet page shows detailed analytics for each token:</p>
+          <ul>
+            <li><strong>Lifetime Claimed</strong> — Total tokens you've claimed for this token over your entire history.</li>
+            <li><strong>Last Claim</strong> — Timestamp of your most recent successful claim.</li>
+            <li><strong>Cooldown Remaining</strong> — Time until your next claim becomes available.</li>
+            <li><strong>Claim Count</strong> — Total number of claims you've made.</li>
+          </ul>
+          <p>All this data comes from the Faucet contract's on-chain state (<code>lastClaim</code> and <code>lifetimeClaimed</code> mappings). It persists across sessions and browser restarts.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>Lifetime claimed data is stored on-chain per wallet address. If you switch wallets, the history for the new wallet starts from zero.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ───── Swap Section ───── -->
+    <section class="qa-section" id="section-swap" data-section="swap">
+      <h2><span class="section-icon">🔄</span> Swap <span class="qa-count">(7)</span></h2>
+
+      <details class="qa-item" data-search="What swap pairs are available?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What swap pairs are available?
+        </summary>
+        <div class="qa-answer">
+          <p>The DEX supports <strong>6 swap paths</strong> across 3 token pairs:</p>
+          <ul>
+            <li><strong>Direct Pairs (via fixed ratio):</strong> mETH ↔ mUSDC, mBTC ↔ mUSDC</li>
+            <li><strong>Cross-Rate Pairs (derived through mUSDC):</strong> mETH ↔ mBTC</li>
+          </ul>
+          <p>The cross-rate is calculated by routing through mUSDC internally: <code>ethAmount → USDC value (via ethSwapRate) → BTC output (via btcSwapRate)</code></p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>The Swap interface shows all available pairs in a dropdown. Select your input and output tokens, and the rate will be calculated automatically.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How does the pricing work?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How does the pricing work?
+        </summary>
+        <div class="qa-answer">
+          <p>The DEX uses a <strong>fixed-ratio pricing model</strong> — not an AMM (Automated Market Maker) like Uniswap.</p>
+          <ul>
+            <li>The contract owner sets <code>ethSwapRate</code> and <code>btcSwapRate</code> on deployment.</li>
+            <li>Simple ratio math: <code>output = input × rate</code>. Cross-rate swaps calculate through the USDC value.</li>
+            <li>Reserve limits: Each swap checks that the DEX has enough reserves to fulfill the order.</li>
+          </ul>
+          <div class="qa-callout qa-callout-warning">
+            <span class="qa-callout-icon">⚠️</span>
+            <p>This is NOT a real-time AMM. Prices don't change based on trade size or pool ratio — they're fixed by the contract owner. This is intentional for educational simplicity.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="Is there a swap fee?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          Is there a swap fee? Who takes it?
+        </summary>
+        <div class="qa-answer">
+          <p><strong>There is no swap fee</strong> in this educational DEX. The full swap amount goes to the user without any deduction.</p>
+          <div class="qa-callout qa-callout-success">
+            <span class="qa-callout-icon">✅</span>
+            <p>Since there are no fees, the full input amount is converted to output at the configured rate. What you see is what you get.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="Who provides liquidity?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          Who provides liquidity to the pools?
+        </summary>
+        <div class="qa-answer">
+          <p><strong>The DEX contract owner</strong> is the sole liquidity provider. They call the <code>addLiquidity()</code> function to deposit mETH, mBTC, and mUSDC tokens into the DEX.</p>
+          <p>The current liquidity is visible on the Swap page in the <strong>Reserves panel</strong>.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>In production DEXes like Uniswap, anyone can be a liquidity provider by depositing equal values of two tokens into a pool. Here, it's simplified to owner-only for educational clarity.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="What is slippage protection?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What is slippage protection and how do I use it?
+        </summary>
+        <div class="qa-answer">
+          <p><strong>Slippage</strong> is the difference between the expected price of a trade and the price at which it's actually executed. Even though this DEX uses fixed rates, slippage protection is implemented as a safety mechanism (<code>minOutput</code>). If the calculated output is <strong>less than</strong> your <code>minOutput</code>, the transaction reverts.</p>
+          <p>You can set the slippage tolerance in the Swap page via the <strong>⚙️ Settings</strong> button (gear icon). Default is 0.5%.</p>
+          <div class="qa-callout qa-callout-warning">
+            <span class="qa-callout-icon">⚠️</span>
+            <p>Setting slippage too low (e.g., 0.1%) may cause transactions to fail if reserves change slightly. Setting it too high (e.g., 10%) defeats the purpose. 0.5% is a good starting point.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How do I approve tokens for swapping?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How do I approve tokens for swapping?
+        </summary>
+        <div class="qa-answer">
+          <p>Before you can swap, the DEX contract needs <strong>permission</strong> to spend your tokens via the ERC20 <code>approve()</code> function.</p>
+          <ol>
+            <li>Select your input token and enter an amount.</li>
+            <li>Click <strong>"Approve"</strong> and confirm the MetaMask transaction.</li>
+            <li>Once approved, the button changes to <strong>"Swap"</strong>.</li>
+          </ol>
+          <p>Approval is per-token and persists across swaps.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>The approval sets <code>type(uint256).max</code> (infinite approval) so you don't need to re-approve for subsequent swaps. You can revoke this at any time by approving 0.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How does the liquidity pool work?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How does the liquidity pool work in this DEX?
+        </summary>
+        <div class="qa-answer">
+          <p>This DEX uses a <strong>simplified reserve-based model</strong>, not a constant product AMM. Reserves track exactly how many tokens the DEX holds (<code>ethReserve</code>, <code>btcReserve</code>, <code>usdcReserve</code>).</p>
+          <p>It does <strong>NOT</strong> use the <code>x × y = k</code> formula, have automated price discovery, or LP tokens.</p>
+          <div class="qa-callout qa-callout-success">
+            <span class="qa-callout-icon">✅</span>
+            <p>The reserve invariants are tested in Foundry with randomized sequences (256 runs × 15 depth) — reserves always match the DEX balance exactly.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ───── Analytics Section ───── -->
+    <section class="qa-section" id="section-analytics" data-section="analytics">
+      <h2><span class="section-icon">📊</span> Analytics <span class="qa-count">(7)</span></h2>
+
+      <details class="qa-item" data-search="What data is shown on the Analytics page?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What data is shown on the Analytics page?
+        </summary>
+        <div class="qa-answer">
+          <p>The Analytics page shows:</p>
+          <ul>
+            <li><strong>📈 Market Stats Cards:</strong> 24h Volume, Total Trades, Active Users, TVL.</li>
+            <li><strong>📊 Candlestick Charts:</strong> Interactive charts for ETH, BTC, and an overview.</li>
+            <li><strong>📋 Token Statistics:</strong> Price, 24h change, market cap, and volume for each token.</li>
+            <li><strong>🔄 Trade History:</strong> Recent swap transactions.</li>
+            <li><strong>👛 Portfolio Overview:</strong> Connected wallet balance and allocation.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="Where does the market data come from?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          Where does the market data come from?
+        </summary>
+        <div class="qa-answer">
+          <p>Market data is powered by the <strong>CoinGecko API</strong> (Free Tier). The frontend fetches candlestick data, prices, and market metrics.</p>
+          <div class="qa-callout qa-callout-warning">
+            <span class="qa-callout-icon">⚠️</span>
+            <p>CoinGecko's free tier has rate limits. If you see stale data, you may have exceeded the request limit. Consider adding a delay or using the API key for higher limits.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How do I read the candlestick charts?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How do I read the candlestick charts?
+        </summary>
+        <div class="qa-answer">
+          <p>Each candle shows 4 data points for a period: <strong>Open, Close, High, and Low</strong>. Green means the price increased (Close > Open), Red means it decreased (Close < Open). The wicks show the high/low range, and the body shows open/close.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>Hover over any candle to see the exact Open, High, Low, Close values for that period. Use the timeframe selector (1D, 1W, 1M, 1Y) to zoom in and out.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="What are the key metrics?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What are the key metrics and how should I interpret them?
+        </summary>
+        <div class="qa-answer">
+          <ul>
+            <li><strong>24h Volume:</strong> Total value of swaps; higher means more activity.</li>
+            <li><strong>Total Trades:</strong> Count of successful swaps.</li>
+            <li><strong>Active Users:</strong> Wallets that performed a swap or claim in the last 24h.</li>
+            <li><strong>TVL:</strong> Total USD value locked in the DEX.</li>
+          </ul>
+          <p>All include trend indicators (↑ or ↓) vs. yesterday.</p>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How does the portfolio tracking work?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How does the portfolio tracking work?
+        </summary>
+        <div class="qa-answer">
+          <p>It displays your token balances (mETH, mBTC, mUSDC), USD values, and an allocation pie chart. It uses <code>balanceOf()</code> calls to fetch data directly from the blockchain via wagmi/viem.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>The portfolio only shows tokens held by your connected wallet. If you switch wallets or disconnect, the data resets for the new address.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="What is shown in the Trade History?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What is shown in the Trade History table?
+        </summary>
+        <div class="qa-answer">
+          <p>It displays a chronological list of transactions, including <strong>Time</strong>, <strong>Swap Type</strong>, <strong>Amount In</strong>, <strong>Amount Out</strong>, and the <strong>User</strong> address.</p>
+          <div class="qa-callout qa-callout-success">
+            <span class="qa-callout-icon">✅</span>
+            <p>You can click any trade to see more details. The table automatically updates when new swaps occur on the connected network.</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="What token statistics are available?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          What token statistics are available?
+        </summary>
+        <div class="qa-answer">
+          <p><strong>Price</strong>, <strong>24h Change</strong>, <strong>Market Cap</strong>, <strong>24h Volume</strong>, and <strong>Circulating Supply</strong>.</p>
+          <div class="qa-callout qa-callout-info">
+            <span class="qa-callout-icon">ℹ️</span>
+            <p>For mock tokens (mETH, mBTC, mUSDC), the supply shown is the total minted by the Faucet. Real market data (price, volume) comes from CoinGecko.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ───── Developer Section ───── -->
+    <section class="qa-section" id="section-developer" data-section="developer">
+      <h2><span class="section-icon">🔧</span> Developer <span class="qa-count">(2)</span></h2>
+
+      <details class="qa-item" data-search="How are the smart contracts structured?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How are the smart contracts structured?
+        </summary>
+        <div class="qa-answer">
+          <p>They use a modular architecture:</p>
+          <ul>
+            <li><strong>MockERC20:</strong> Standard ERC20 with minting restricted to a <code>faucet</code> address.</li>
+            <li><strong>Faucet:</strong> Manages time-locked distributions and claim history.</li>
+            <li><strong>MockDEX:</strong> Manages 3 reserves, 2 swap rates, and 6 swap paths using SafeERC20.</li>
+          </ul>
+          <p>Uses custom errors and the checks-effects-interactions pattern for security.</p>
+        </div>
+      </details>
+
+      <details class="qa-item" data-search="How is the project tested?">
+        <summary>
+          <span class="qa-toggle">+</span>
+          How is the project tested?
+        </summary>
+        <div class="qa-answer">
+          <p><strong>182+ Solidity tests</strong> across all contracts:</p>
+          <ul>
+            <li><strong>MockERC20:</strong> 35 tests</li>
+            <li><strong>Faucet:</strong> 51 tests</li>
+            <li><strong>MockDEX:</strong> 96 tests (including 14 fuzz tests and 4 invariant tests to ensure reserves match balances)</li>
+            <li><strong>Frontend:</strong> Vitest + Testing Library</li>
+          </ul>
+          <div class="qa-callout qa-callout-success">
+            <span class="qa-callout-icon">✅</span>
+            <p>Run <code>make test-contracts</code> or <code>forge test -vvv</code> to run all 182+ Solidity tests. Fuzz runs + invariant tests take ~30 seconds.</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- No results message -->
+    <div class="qa-no-results" id="qaNoResults">
+      <p>🔍 No matching questions found.</p>
+      <p style="font-size:0.85rem;color:var(--text-muted);">Try a different search term or clear the filter.</p>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License. Built with Foundry, Next.js, and shadcn/ui.</p>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+  <script>
+    (function() {
+      // ── Tab Filtering ──
+      const tabs = document.querySelectorAll('.qa-tab');
+      const sections = document.querySelectorAll('.qa-section');
+      const allItems = document.querySelectorAll('.qa-item');
+      const noResults = document.getElementById('qaNoResults');
+      const searchInput = document.getElementById('qaSearchInput');
+      const searchClear = document.getElementById('qaSearchClear');
+
+      function filterQA() {
+        const activeTab = document.querySelector('.qa-tab.active');
+        const section = activeTab ? activeTab.dataset.section : 'all';
+        const query = searchInput.value.toLowerCase().trim();
+
+        // Filter sections by tab
+        sections.forEach(s => {
+          if (section === 'all' || s.dataset.section === section) {
+            s.classList.remove('hidden');
+          } else {
+            s.classList.add('hidden');
+          }
+        });
+
+        // Filter items by search
+        let totalVisible = 0;
+        allItems.forEach(item => {
+          const searchText = item.dataset.search ? item.dataset.search.toLowerCase() : '';
+          const answerText = item.querySelector('.qa-answer') ? item.querySelector('.qa-answer').textContent.toLowerCase() : '';
+          const matchesSearch = !query || searchText.includes(query) || answerText.includes(query);
+
+          // Check if section is visible
+          const parentSection = item.closest('.qa-section');
+          const sectionVisible = parentSection && !parentSection.classList.contains('hidden');
+
+          if (matchesSearch && sectionVisible) {
+            item.style.display = '';
+            totalVisible++;
+          } else {
+            item.style.display = 'none';
+          }
+        });
+
+        // Show no results message
+        if (totalVisible === 0) {
+          noResults.style.display = 'block';
+        } else {
+          noResults.style.display = 'none';
+        }
+
+        // Show clear button
+        if (query.length > 0) {
+          searchClear.classList.add('visible');
+        } else {
+          searchClear.classList.remove('visible');
+        }
+      }
+
+      // Tab click
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          tabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          filterQA();
+        });
+      });
+
+      // Search input
+      searchInput.addEventListener('input', filterQA);
+
+      // Clear search
+      searchClear.addEventListener('click', function() {
+        searchInput.value = '';
+        filterQA();
+        searchInput.focus();
+      });
+
+      // ── Close other details when one opens ──
+      allItems.forEach(item => {
+        item.addEventListener('toggle', function() {
+          if (this.open) {
+            // Close all other items in the same section
+            const section = this.closest('.qa-section');
+            if (section) {
+              section.querySelectorAll('.qa-item').forEach(other => {
+                if (other !== this && other.open) {
+                  other.removeAttribute('open');
+                }
+              });
+            }
+          }
+        });
+      });
+
+
+    })();
+  </script>
+</body>
+</html>
