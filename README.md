@@ -33,7 +33,7 @@
     <td align="center"><strong>📊 Analytics & Charts</strong></td>
   </tr>
   <tr>
-    <td width="50%"><img src="images/Facut.png" alt="Faucet Page" width="100%"/></td>
+    <td width="50%"><img src="images/Faucet.png" alt="Faucet Page" width="100%"/></td>
     <td width="50%"><img src="images/Swap.png" alt="Swap Page" width="100%"/></td>
   </tr>
   <tr>
@@ -161,8 +161,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### 7. Deploy & Auto-Update Addresses
 
 ```bash
-make deploy-update
-# Deploys to Anvil and auto-captures contract addresses into the frontend config
+make deploy-anvil
+# Builds → deploys to Anvil → prompts for private key → auto-captures addresses
+```
+
+For Sepolia testnet:
+```bash
+# First, configure contracts/.env:
+#   cp contracts/.env.example contracts/.env
+#   Edit with your RPC URL and Etherscan API key
+
+make deploy-sepolia
+# Builds → deploys to Sepolia → verifies on Etherscan → auto-captures addresses
 ```
 
 ### 8. Production Build
@@ -233,9 +243,10 @@ The Solidity test suite includes:
 ### Documentation
 
 User and developer documentation is available via GitHub Pages:
+- [Documentation Home](https://men6d656e.github.io/DEX/)
 - [User Guide](https://men6d656e.github.io/DEX/user-guide/)
 - [Developer Guide](https://men6d656e.github.io/DEX/developer-guide/)
-- [Documentation Home](https://men6d656e.github.io/DEX/)
+- [FAQ](https://men6d656e.github.io/DEX/qa.html)
 
 ---
 
@@ -247,10 +258,10 @@ User and developer documentation is available via GitHub Pages:
 | `make build` | Build contracts + frontend |
 | `make test` | Run all tests |
 | `make anvil` | Start local Anvil node (port 8545) |
-| `make deploy-anvil` | Deploy to Anvil |
-| `make deploy-sepolia` | Deploy to Sepolia testnet |
-| `make deploy-update` | Deploy to Anvil + auto-update frontend addresses |
-| `make dev` | Install frontend deps + start dev server |
+| `make deploy-anvil` | Deploy to Anvil + auto-update frontend addresses |
+| `make deploy-sepolia` | Deploy to Sepolia testnet + verify on Etherscan + auto-update |
+| `make update-addresses` | Re-capture addresses from broadcast JSON |
+| `make dev` | Install frontend deps + start dev server (localhost:3000) |
 | `make dev-frontend` | Start frontend dev server (localhost:3000) |
 | `make prod` | Build + serve production |
 | `make prod-frontend` | Serve production build |

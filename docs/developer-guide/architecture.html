@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Architecture — DEX Dashboard Developer Guide</title>
-  <meta name="description" content="System architecture for the DEX Dashboard monorepo." />
+  <meta name="description" content="System architecture for the DEX Dashboard monorepo — contracts, frontend, data flow, and design decisions." />
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
@@ -35,41 +35,243 @@
 
     <h1>🏗 System Architecture</h1>
 
+    <h2>Overview</h2>
+    <p>The DEX Dashboard is a <strong>full-stack Web3 monorepo</strong> with smart contracts on the backend (Solidity + Foundry) and a React frontend (Next.js 16 + wagmi). It simulates a decentralized exchange where users can mint mock tokens, trade them on a fixed-ratio DEX, and track market data from CoinGecko.</p>
+
+    <!-- ── Monorepo Structure ── -->
     <h2>Monorepo Structure</h2>
-    <p>The project is organized as a monorepo with three main directories:</p>
     <pre>
 DEX/
-├── contracts/         # Foundry (Solidity) project
-│   ├── src/           # Smart contracts
-│   ├── test/          # Solidity tests
-│   └── script/        # Deployment scripts
-├── frontend/          # Next.js 16 application
+├── contracts/                     # Foundry smart contracts
 │   ├── src/
-│   │   ├── app/       # Pages (Home, Faucet, Swap, Analytics)
-│   │   ├── components/# UI components
-│   │   ├── hooks/     # Custom React hooks
-│   │   └── lib/       # Utilities & constants
-├── docs/              # GitHub Pages documentation
-├── Makefile           # Build automation
-└── SPEC.md            # Architecture specification</pre>
+│   │   ├── MockERC20.sol          # ERC20 token (mETH, mBTC, mUSDC)
+│   │   ├── Faucet.sol             # Time-locked token faucet
+│   │   └── MockDEX.sol            # Fixed-ratio DEX with 6 swap paths
+│   ├── test/                      # 182+ Solidity tests
+│   │   ├── MockERC20.t.sol        # 35 tests
+│   │   ├── Faucet.t.sol           # 51 tests
+│   │   ├── MockDEX.t.sol          # 96 tests (fuzz + invariant)
+│   │   └── MockDEX.invariant.t.sol # Invariant tests
+│   ├── script/
+│   │   └── Deploy.s.sol           # Deployment script
+│   ├── .env                       # Sepolia RPC URL + Etherscan API key
+│   └── foundry.toml               # Foundry configuration
+├── frontend/                      # Next.js 16 application
+│   ├── src/
+│   │   ├── app/                   # Pages (Home, Faucet, Swap, Analytics)
+│   │   ├── components/            # UI components (shadcn/ui, custom)
+│   │   ├── hooks/                 # Custom React hooks
+│   │   ├── lib/                   # Constants, ABIs, utilities
+│   │   └── providers.tsx          # Web3 provider
+│   └── tests/                     # Vitest frontend tests
+├── docs/                          # GitHub Pages documentation
+│   ├── index.html                 # Documentation home
+│   ├── user-guide/                # User-facing guides
+│   ├── developer-guide/           # Developer-facing guides
+│   ├── qa.html                    # FAQ page with search
+│   └── assets/                    # CSS, JS
+├── scripts/
+│   └── update-addresses.sh        # Extracts deployed addresses → constants.ts
+├── images/                        # README screenshots
+└── Makefile                       # Build automation (install, build, test, deploy)</pre>
 
-    <h2>Data Flow</h2>
+    <!-- ── Smart Contract Architecture ── -->
+    <h2>Smart Contract Architecture</h2>
+    <p>Three contracts are deployed together. The deployment script handles the inter-contract wiring automatically.</p>
+
+    <h3>Contract Dependencies</h3>
+    <pre>
+┌─────────────┐     ┌───────────────────┐
+│  MockERC20  │────▶│      Faucet       │
+│  (mETH)     │     │                   │
+│             │     │  - mints via      │
+│  MockERC20  │     │    setFaucet()    │
+│  (mBTC)     │     │  - 24h cooldown   │
+│             │     │  - 3 tokens       │
+│  MockERC20  │     └───────────────────┘
+│  (mUSDC)    │
+│             │     ┌───────────────────┐
+│             │────▶│     MockDEX       │
+│             │     │                   │
+│             │     │  - 3 reserves     │
+│             │     │  - 2 swap rates   │
+│             │     │  - 6 swap paths   │
+│             │     │  - SafeERC20      │
+│             │     └───────────────────┘
+└─────────────┘</pre>
+
+    <h3>Deployment Flow</h3>
     <ol>
-      <li><strong>User connects wallet</strong> via wagmi + MetaMask connector</li>
-      <li><strong>Frontend reads on-chain data</strong> using wagmi hooks (useReadContract, useReadContracts)</li>
-      <li><strong>User submits transactions</strong> through wagmi's useWriteContract</li>
-      <li><strong>Chart data</strong> is fetched from CoinGecko API with simulated fallback</li>
-      <li><strong>Analytics data</strong> combines on-chain reserves with simulated trade data</li>
+      <li><strong>Step 1:</strong> Deploy 3 MockERC20 instances (mETH, mBTC, mUSDC) — each gets a placeholder faucet address</li>
+      <li><strong>Step 2:</strong> Deploy Faucet contract — receives mETH, mBTC, mUSDC addresses; becomes their real faucet via <code>setFaucet()</code></li>
+      <li><strong>Step 3:</strong> Deploy MockDEX contract — receives all 3 token addresses plus initial swap rates (<code>ethRate=1700, btcRate=40000</code>)</li>
+      <li><strong>Step 4:</strong> Add initial liquidity — owner deposits tokens into MockDEX reserves</li>
+      <li><strong>Step 5:</strong> Update Faucet addresses — tokens' faucet is set to the real Faucet contract (after minting initial liquidity)</li>
     </ol>
 
-    <h2>Key Design Decisions</h2>
+    <!-- ── Data Flow ── -->
+    <h2>Data Flow</h2>
+    <pre>
+┌──────────┐    Connect Wallet     ┌─────────────┐
+│  User    │──────────────────────▶│   MetaMask   │
+│ (Browser)│                       │   (Wallet)   │
+│          │◀──────────────────────│              │
+│          │    Sign Txn / Read    └─────────────┘
+└────┬─────┘                              │
+     │                                    │
+     │  ┌─────────────────────────────────┤
+     │  │  wagmi / viem                   │
+     │  │                                 │
+     │  ├─ useAccount()                   │
+     │  ├─ useReadContract()   ◀─── On-chain reads
+     │  ├─ useWriteContract()  ───▶ On-chain writes
+     │  └─ useWaitForTxnReceipt()
+     │
+     ▼
+┌─────────────────────────────┐
+│    Next.js 16 Frontend      │
+│                             │
+│  ┌───────────────────────┐  │
+│  │  Pages (App Router)   │  │
+│  │  ├─ Home (/)          │  │
+│  │  ├─ Faucet /faucet    │  │
+│  │  ├─ Swap /swap        │  │
+│  │  └─ Analytics /analytics │
+│  └───────────────────────┘  │
+│                             │
+│  ┌───────────────────────┐  │
+│  │  Custom Hooks         │  │
+│  │  ├─ use-dex.ts        │  │
+│  │  ├─ use-faucet.ts     │  │
+│  │  ├─ use-token-balances│  │
+│  │  ├─ use-analytics.ts  │  │
+│  │  └─ use-market-data.ts│──▶ CoinGecko API
+│  └───────────────────────┘  │
+└─────────────────────────────┘</pre>
+
+    <h3>Read Path (Viewing Data)</h3>
+    <ol>
+      <li>User connects wallet via wagmi + MetaMask connector</li>
+      <li>Frontend calls <code>useReadContract</code> to fetch on-chain state (balances, reserves, rates, cooldowns)</li>
+      <li>Market data is fetched from CoinGecko API for candlestick charts and token prices</li>
+      <li>Analytics page combines on-chain DEX data with market data and simulated trade history</li>
+    </ol>
+
+    <h3>Write Path (Transactions)</h3>
+    <ol>
+      <li>User fills a form (e.g., swap amount on Swap page)</li>
+      <li>Frontend calls <code>useWriteContract</code> with the encoded function call</li>
+      <li>wagmi prompts the user to sign/confirm in MetaMask</li>
+      <li>Transaction is submitted to the network (Anvil or Sepolia)</li>
+      <li>Frontend waits for receipt via <code>useWaitForTransactionReceipt</code></li>
+      <li>On success, queries are invalidated and refetched automatically</li>
+    </ol>
+
+    <!-- ── Frontend Component Architecture ── -->
+    <h2>Frontend Component Architecture</h2>
+    <pre>
+layout/                components/                hooks/
+├── header.tsx         ├── ui/ (13 primitives)    ├── use-dex.ts
+├── footer.tsx         │   ├── button.tsx         ├── use-faucet.ts
+└── wallet-button.tsx  │   ├── card.tsx           ├── use-token-balances.ts
+                       │   ├── dialog.tsx         ├── use-analytics.ts
+pages/                 │   ├── tabs.tsx           └── use-market-data.ts
+├── page.tsx (Home)    │   └── ...
+├── faucet/page.tsx    ├── home/                  lib/
+├── swap/page.tsx      │   ├── stats-counters.tsx ├── constants.ts
+└── analytics/         │   └── animated-section   ├── wagmi.ts
+    ├── page.tsx       ├── faucet/                ├── dex-abi.ts
+    └── client.tsx     │   └── claim-card.tsx     ├── faucet-abi.ts
+                       ├── swap/                  ├── utils.ts
+                       │   ├── swap-card.tsx      └── market-data.ts
+                       │   └── settings.tsx
+                       ├── analytics/
+                       │   ├── stats-cards.tsx
+                       │   ├── token-table.tsx
+                       │   ├── trade-history.tsx
+                       │   └── portfolio.tsx
+                       └── charts/
+                           └── candlestick.tsx</pre>
+
+    <h3>State Management</h3>
     <ul>
-      <li><strong>Foundry</strong> — Native Solidity testing with fuzz support, fast compilation</li>
-      <li><strong>wagmi + viem</strong> — Modern React hooks for wallet connection and contract interaction</li>
-      <li><strong>shadcn/ui</strong> — Accessible, customizable Radix UI primitives with Tailwind</li>
-      <li><strong>Ratio-based swap</strong> — Educational simplicity over AMM complexity</li>
-      <li><strong>Raw HTML docs</strong> — GitHub Pages compatible with zero build step</li>
+      <li><strong>Wallet state:</strong> wagmi hooks (<code>useAccount</code>, <code>useBalance</code>, <code>useChainId</code>)</li>
+      <li><strong>Contract reads:</strong> <code>useReadContract</code> / <code>useReadContracts</code> with automatic caching via <code>@tanstack/react-query</code> (10s stale time)</li>
+      <li><strong>Contract writes:</strong> <code>useWriteContract</code> + <code>useWaitForTransactionReceipt</code> — auto-invalidates queries on success</li>
+      <li><strong>Local state:</strong> React <code>useState</code> for form inputs, slippage settings, and UI toggles</li>
     </ul>
+
+    <h3>Design Patterns</h3>
+    <ul>
+      <li><strong>Server/Client split:</strong> Pages are server components for metadata/SEO; interactive UI is delegated to client components</li>
+      <li><strong>Animated sections:</strong> <code>AnimatedSection</code> wraps content with Intersection Observer fade-in animations</li>
+      <li><strong>Error handling:</strong> Every component handles <code>loading</code>, <code>error</code>, <code>empty</code>, and <code>not-deployed</code> states</li>
+      <li><strong>Accessibility:</strong> Skip-to-content link, <code>aria-labels</code>, <code>focus-visible</code> styles, <code>prefers-reduced-motion</code> support</li>
+      <li><strong>Network detection:</strong> Frontend automatically detects Anvil vs Sepolia and shows correct contract addresses</li>
+    </ul>
+
+    <!-- ── Key Design Decisions ── -->
+    <h2>Key Design Decisions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Decision</th>
+          <th>Rationale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Foundry</strong> (vs Hardhat)</td>
+          <td>Native Solidity testing with fuzz/invariant support, fast compilation in Rust, and built-in linting</td>
+        </tr>
+        <tr>
+          <td><strong>Fixed-ratio DEX</strong> (vs AMM)</td>
+          <td>Educational simplicity — users understand rate-based swaps without AMM complexity (x⋅y=k). Rates are owner-set constants.</td>
+        </tr>
+        <tr>
+          <td><strong>3-reserve model</strong> (vs 2-token pools)</td>
+          <td>Supports cross-rate swaps (mETH↔mBTC) by routing through mUSDC internally, demonstrating a real DeFi pattern</td>
+        </tr>
+        <tr>
+          <td><strong>wagmi + viem</strong></td>
+          <td>Modern, type-safe React hooks for wallet connection and contract interaction. Replaces ethers.js v5.</td>
+        </tr>
+        <tr>
+          <td><strong>shadcn/ui + Tailwind</strong></td>
+          <td>Accessible, customizable Radix UI primitives that compose well. Full design control without a bloated component library.</td>
+        </tr>
+        <tr>
+          <td><strong>Raw HTML docs</strong> (GitHub Pages)</td>
+          <td>Zero build step, no framework dependencies. The docs are plain HTML/CSS/JS that deploy instantly via GitHub Pages.</td>
+        </tr>
+        <tr>
+          <td><strong>--interactives 1</strong> (private key)</td>
+          <td>Forge prompts for the private key interactively at deploy time. No env vars, no plaintext key files.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ── Testing Overview ── -->
+    <h2>Testing Overview</h2>
+    <p>The project has <strong>182+ Solidity tests</strong> and frontend unit tests:</p>
+    <ul>
+      <li><strong>MockERC20:</strong> 35 tests — minting, faucet restrictions, ownership, events</li>
+      <li><strong>Faucet:</strong> 51 tests — claims, cooldowns, edge cases, admin functions</li>
+      <li><strong>MockDEX:</strong> 96 tests — all 6 swap paths, slippage, liquidity, 14 fuzz tests, 4 invariant tests</li>
+      <li><strong>Frontend:</strong> Vitest + React Testing Library — utility functions, formatting helpers</li>
+    </ul>
+    <p>See the <a href="testing.html">Testing Guide</a> for complete details.</p>
+  </div>
+
+  <!-- Page Navigation -->
+  <div class="container">
+    <div class="page-nav">
+      <span></span>
+      <a href="contracts.html" class="page-nav-link next">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">Smart Contracts</span>
+      </a>
+    </div>
   </div>
 
   <footer class="site-footer">

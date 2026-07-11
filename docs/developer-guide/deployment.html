@@ -42,10 +42,11 @@
       <li><a href="https://git-scm.com/" target="_blank" rel="noopener">Git</a></li>
     </ul>
 
-    <h2>1. Install Dependencies</h2>
+    <h2>1. Clone & Install</h2>
     <pre>git clone https://github.com/Men6d656e/DEX.git
 cd DEX
 make install</pre>
+    <p>This installs Foundry dependencies (<code>forge install</code>) and frontend npm packages.</p>
 
     <h2>2. Build Contracts</h2>
     <pre>make build-contracts</pre>
@@ -54,51 +55,136 @@ make install</pre>
     <pre># All tests
 make test
 
-# Just contract tests
+# Just contract tests (182+ Solidity tests)
 make test-contracts
 
 # Just frontend tests
 make test-frontend
 
-# Coverage report
+# Coverage report (LCOV)
 make coverage</pre>
 
     <h2>4. Local Development (Anvil)</h2>
-    <p>Start a local Anvil node in one terminal:</p>
+    <p>Start a local Anvil node in <strong>Terminal 1</strong>:</p>
     <pre>make anvil</pre>
-    <p>In another terminal, deploy contracts:</p>
+    <p>In <strong>Terminal 2</strong>, deploy contracts (one command does it all):</p>
     <pre>make deploy-anvil</pre>
-    <p>You'll be prompted to enter a private key interactively. For Anvil, you can use one of the default private keys printed when Anvil starts.</p>
+    <p>This will:</p>
+    <ol>
+      <li>Build contracts</li>
+      <li>Prompt you <strong>interactively</strong> for a private key (via <code>--interactives 1</code>)</li>
+      <li>Deploy all contracts (MockERC20 × 3, Faucet, MockDEX) to Anvil</li>
+      <li>Add initial liquidity to the DEX</li>
+      <li><strong>Auto-capture</strong> the deployed contract addresses into <code>frontend/src/lib/constants.ts</code></li>
+    </ol>
+    <p>💡 For Anvil, use one of the default private keys printed when Anvil starts (e.g., <code>0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80</code>).</p>
 
-    <h3>Update Contract Addresses</h3>
-    <p>After deployment, the script outputs contract addresses in JSON format. Copy these into <code>frontend/src/lib/constants.ts</code>.</p>
+    <h3>Start the Frontend</h3>
+    <pre>make dev</pre>
+    <p>This installs any missing frontend dependencies and starts the dev server at <code>http://localhost:3000</code> with hot reload.</p>
 
-    <h2>5. Start Frontend</h2>
-    <pre>make install-frontend
-make build-frontend
+    <h2>5. Sepolia Testnet</h2>
+    <h3>Configure Environment</h3>
+    <p>Create <code>contracts/.env</code> from the template:</p>
+    <pre>cp contracts/.env.example contracts/.env</pre>
+    <p>Edit <code>contracts/.env</code> with your Sepolia RPC URL and Etherscan API key:</p>
+    <pre># Sepolia RPC URL (from Alchemy, Infura, or your provider)
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_API_KEY
 
-# Or for development with hot reload:
-cd frontend && npm run dev</pre>
-    <p>The frontend will be available at <code>http://localhost:3000</code>.</p>
+# Etherscan API key (for contract verification)
+ETHERSCAN_API_KEY=YOUR_ETHERSCAN_API_KEY</pre>
 
-    <h2>6. Sepolia Testnet</h2>
-    <p>Set up environment variables:</p>
-    <pre>export SEPOLIA_RPC_URL=https://rpc.sepolia.org</pre>
-    <p>Deploy:</p>
+    <h3>Deploy to Sepolia</h3>
     <pre>make deploy-sepolia</pre>
-    <p>You'll be prompted for a private key interactively (use a wallet with Sepolia ETH for gas).</p>
+    <p>This will:</p>
+    <ol>
+      <li>Build contracts</li>
+      <li>Load <code>SEPOLIA_RPC_URL</code> and <code>ETHERSCAN_API_KEY</code> from <code>contracts/.env</code></li>
+      <li>Prompt you <strong>interactively</strong> for a private key</li>
+      <li>Deploy all contracts to Sepolia</li>
+      <li><strong>Verify contracts</strong> on Etherscan (<code>--verify</code>)</li>
+      <li><strong>Auto-capture</strong> addresses into <code>frontend/src/lib/constants.ts</code></li>
+    </ol>
+    <div class="qa-callout qa-callout-warning">
+      <span class="qa-callout-icon">⚠️</span>
+      <p>Make sure your wallet has Sepolia test ETH for gas. You can get it from <a href="https://sepoliafaucet.com/" target="_blank" rel="noopener">sepoliafaucet.com</a>.</p>
+    </div>
+
+    <h3>Contract Verification</h3>
+    <p>The <code>--verify</code> flag automatically submits your source code to Etherscan after deployment. You can then view your contracts with a "Verified" badge on the Sepolia Etherscan explorer.</p>
+
+    <h2>6. Manual Address Update</h2>
+    <p>If you need to re-capture addresses without redeploying (e.g., after a <code>git checkout</code> reverted <code>constants.ts</code>):</p>
+    <pre>make update-addresses CHAIN_ID=31337   # For Anvil
+make update-addresses CHAIN_ID=11155111 # For Sepolia</pre>
+    <p>This parses the latest <code>broadcast/Deploy.s.sol/run-latest.json</code> and writes to <code>frontend/src/lib/constants.ts</code>.</p>
 
     <h2>7. Production Build</h2>
-    <pre>make build</pre>
-    <p>The frontend build is output to <code>frontend/.next/</code> and can be deployed to any Node.js hosting platform (Vercel, Railway, etc.).</p>
+    <pre>make prod</pre>
+    <p>This builds the frontend (<code>npm run build</code>) and starts the production server at <code>http://localhost:3000</code>.</p>
+
+    <h3>Deploying to Vercel</h3>
+    <p>The frontend is ready for Vercel deployment:</p>
+    <ol>
+      <li>Push the repository to GitHub</li>
+      <li>Import the project in <a href="https://vercel.com/" target="_blank" rel="noopener">Vercel</a></li>
+      <li>Set the <strong>Root Directory</strong> to <code>frontend</code></li>
+      <li>Add environment variable <code>NEXT_PUBLIC_COINGECKO_API_KEY</code> (optional, for CoinGecko market data)</li>
+      <li>Deploy</li>
+    </ol>
 
     <h2>8. CoinGecko API Key (Optional)</h2>
     <p>To use live market data instead of simulated charts:</p>
     <ol>
       <li>Get a free API key from <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener">CoinGecko</a></li>
-      <li>Set it in your environment: <code>NEXT_PUBLIC_COINGECKO_API_KEY=your_key_here</code></li>
-      <li>For local development, add it to <code>frontend/.env.local</code></li>
+      <li>For local development, create <code>frontend/.env.local</code>:
+        <pre>NEXT_PUBLIC_COINGECKO_API_KEY=your_api_key_here</pre>
+      </li>
+      <li>For production (Vercel), add as an environment variable in the project settings</li>
     </ol>
+    <div class="qa-callout qa-callout-info">
+      <span class="qa-callout-icon">ℹ️</span>
+      <p>Without a CoinGecko API key, the frontend falls back to simulated market data. The app works fine either way.</p>
+    </div>
+
+    <h2>9. Makefile Reference</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>make install</code></td><td>Install all dependencies (forge + npm)</td></tr>
+        <tr><td><code>make build</code></td><td>Build contracts + frontend</td></tr>
+        <tr><td><code>make test</code></td><td>Run all tests</td></tr>
+        <tr><td><code>make anvil</code></td><td>Start local Anvil node (port 8545)</td></tr>
+        <tr><td><code>make deploy-anvil</code></td><td>Deploy to Anvil + auto-update addresses</td></tr>
+        <tr><td><code>make deploy-sepolia</code></td><td>Deploy to Sepolia + verify + auto-update</td></tr>
+        <tr><td><code>make update-addresses</code></td><td>Re-capture addresses from broadcast JSON</td></tr>
+        <tr><td><code>make dev</code></td><td>Install frontend deps + start dev server</td></tr>
+        <tr><td><code>make prod</code></td><td>Build + serve production</td></tr>
+        <tr><td><code>make coverage</code></td><td>Generate Foundry coverage report</td></tr>
+        <tr><td><code>make fmt</code></td><td>Format Solidity + TypeScript</td></tr>
+        <tr><td><code>make generate-abi</code></td><td>Generate wagmi type-safe hooks</td></tr>
+        <tr><td><code>make clean</code></td><td>Clean all artifacts</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Page Navigation -->
+  <div class="container">
+    <div class="page-nav">
+      <a href="frontend.html" class="page-nav-link">
+        <span class="nav-label">← Previous</span>
+        <span class="nav-title">Frontend Architecture</span>
+      </a>
+      <a href="testing.html" class="page-nav-link next">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">Testing</span>
+      </a>
+    </div>
   </div>
 
   <footer class="site-footer">

@@ -34,61 +34,209 @@
     </div>
 
     <h1>📄 Smart Contracts</h1>
-    <p>Three contracts form the backend of the DEX Dashboard: MockERC20 (token), Faucet (distribution), and MockDEX (trading).</p>
+    <p>Three contracts form the backend of the DEX Dashboard: <strong>MockERC20</strong> (token), <strong>Faucet</strong> (distribution), and <strong>MockDEX</strong> (trading). All contracts inherit from OpenZeppelin for battle-tested security.</p>
 
-    <h2>MockERC20</h2>
-    <p>OpenZeppelin-based ERC20 token with mint capability restricted to a designated faucet address.</p>
+    <!-- ── MockERC20 ── -->
+    <h2>1. MockERC20 — Mock Tokens</h2>
+    <p>OpenZeppelin-based ERC20 token with mint capability restricted to a designated faucet address. Deployed as three independent instances.</p>
+
+    <h3>Deployed Instances</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Token</th>
+          <th>Symbol</th>
+          <th>Contract</th>
+          <th>Decimal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Mock Ethereum</td>
+          <td><code>mETH</code></td>
+          <td><code>MockERC20("Mock ETH", "mETH", faucetAddress)</code></td>
+          <td>18</td>
+        </tr>
+        <tr>
+          <td>Mock Bitcoin</td>
+          <td><code>mBTC</code></td>
+          <td><code>MockERC20("Mock BTC", "mBTC", faucetAddress)</code></td>
+          <td>18</td>
+        </tr>
+        <tr>
+          <td>Mock USDC</td>
+          <td><code>mUSDC</code></td>
+          <td><code>MockERC20("Mock USDC", "mUSDC", faucetAddress)</code></td>
+          <td>18</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Key Functions</h3>
+    <ul>
+      <li><code>mint(to, amount)</code> — Only callable by the designated faucet address. Emits <code>TokensMinted</code> event.</li>
+      <li><code>setFaucet(newFaucet)</code> — <code>onlyOwner</code>. Updates the address authorized to mint.</li>
+    </ul>
+
+    <h3>Errors</h3>
+    <ul>
+      <li><code>MockERC20__NotFaucet()</code> — Caller is not the faucet address</li>
+      <li><code>MockERC20__InvalidFaucet()</code> — Faucet address is zero</li>
+    </ul>
+
+    <!-- ── Faucet ── -->
+    <h2>2. Faucet — Token Distribution</h2>
+    <p>Time-locked faucet distributing <strong>10 tokens per claim</strong> with an <strong>independent 24-hour cooldown</strong> per wallet per token. Supports all three mock tokens (mETH, mBTC, mUSDC).</p>
+
+    <h3>State Variables</h3>
     <pre>
-Contract: MockERC20
-Inherits: OpenZeppelin ERC20, Ownable
-Key Features:
-- constructor(name, symbol, faucetAddress)
-- mint(to, amount) — only callable by the faucet address
-- setFaucet(newFaucet) — onlyOwner
-- TokensMinted(address indexed to, uint256 amount) event</pre>
-    <p><strong>Deployment:</strong> Three instances — mETH, mBTC, and mUSDC.</p>
+mapping(address => mapping(uint256 => uint256)) lastClaim;
+// user => tokenIndex => unix timestamp
 
-    <h2>Faucet</h2>
-    <p>Time-locked token distribution contract with per-user, per-token 24-hour cooldown tracking.</p>
+mapping(address => mapping(uint256 => uint256)) lifetimeClaimed;
+// user => tokenIndex => total tokens claimed
+
+uint256 claimAmount;    // Default: 10 * 10**18
+uint256 cooldown;       // Default: 24 hours (86400s)
+MockERC20[] tokens;     // [mETH, mBTC, mUSDC]</pre>
+
+    <h3>Key Functions</h3>
+    <ul>
+      <li><code>claimToken(tokenIndex)</code> — Claims tokens. <code>0=mETH</code>, <code>1=mBTC</code>, <code>2=mUSDC</code>. Reverts if cooldown hasn't elapsed.</li>
+      <li><code>getClaimInfo(user, tokenIndex) → (canClaim, timeRemaining, totalClaimed, lastClaimTime)</code> — View function for claim eligibility.</li>
+      <li><code>getTokenCount() → uint256</code> — Returns number of supported tokens (3).</li>
+      <li><code>getTokenAddress(tokenIndex) → address</code> — Returns token contract address by index.</li>
+      <li><code>setClaimAmount(amount)</code> — <code>onlyOwner</code>. Updates tokens per claim.</li>
+      <li><code>setCooldown(seconds)</code> — <code>onlyOwner</code>. Updates cooldown period.</li>
+    </ul>
+
+    <h3>Errors</h3>
+    <ul>
+      <li><code>Faucet__CooldownNotElapsed(remaining)</code> — Must wait <code>remaining</code> seconds</li>
+      <li><code>Faucet__InvalidToken()</code> — Token index out of range</li>
+      <li><code>Faucet__InvalidAddress()</code> — Zero address in constructor</li>
+      <li><code>Faucet__InvalidClaimAmount()</code> — Claim amount set to zero</li>
+      <li><code>Faucet__InvalidCooldown()</code> — Cooldown set to zero</li>
+    </ul>
+
+    <!-- ── MockDEX ── -->
+    <h2>3. MockDEX — Swap Engine</h2>
+    <p>A fixed-ratio DEX supporting <strong>6 swap paths</strong> across 3 tokens. Uses a simplified reserve-based model (not a constant product AMM like Uniswap).</p>
+
+    <h3>State Variables</h3>
     <pre>
-Contract: Faucet
-Inherits: OpenZeppelin Ownable
-State:
-- lastClaim[user][token] → uint256 (unix timestamp)
-- lifetimeClaimed[user][token] → uint256
-- COOLDOWN: 24 hours
-- CLAIM_AMOUNT: 10 tokens (with 18 decimals)
-Key Functions:
-- claimToken(tokenIndex) — 0 = mETH, 1 = mBTC
-- getClaimInfo(user, tokenIndex) → (canClaim, timeRemaining, lifetimeClaimed, lastClaimTime)
-- setClaimAmount(amount) — onlyOwner
-- setCooldown(seconds) — onlyOwner
-Errors:
-- Faucet__CooldownNotElapsed(remaining)
-- Faucet__InvalidToken()</pre>
+IERC20 public immutable mETH;     // mETH token contract
+IERC20 public immutable mBTC;     // mBTC token contract
+IERC20 public immutable mUSDC;    // mUSDC token contract
 
-    <h2>MockDEX</h2>
-    <p>Simple ratio-based swap contract enabling mETH ↔ mUSDC trades with slippage protection.</p>
-    <pre>
-Contract: MockDEX
-Inherits: OpenZeppelin Ownable
-State:
-- mETH, mUSDC: IERC20 token addresses
-- ethReserve, usdcReserve: uint256
-- swapRate: uint256 (e.g., 1700 = 1 mETH = 1700 mUSDC)
-Key Functions:
-- addLiquidity(ethAmount, usdcAmount) — onlyOwner
-- swapETHForUSDC(ethAmount, minUSDC)
-- swapUSDCForETH(usdcAmount, minETH)
-- getRate() → uint256
-- setRate(newRate) — onlyOwner
-Errors:
-- MockDEX__InsufficientLiquidity()
-- MockDEX__SlippageExceeded()
-- MockDEX__ZeroAmount()</pre>
+uint256 public ethReserve;        // Current mETH reserve
+uint256 public btcReserve;        // Current mBTC reserve
+uint256 public usdcReserve;       // Current mUSDC reserve
 
-    <h2>Testing</h2>
-    <p>All contracts use Foundry's <code>forge test</code> with Solidity-based unit tests, fuzz testing, and custom error assertions. Target is 100% line coverage. See the <a href="testing.html">Testing Guide</a> for details.</p>
+uint256 public ethSwapRate;       // mUSDC per 1 mETH (scaled 1e18)
+uint256 public btcSwapRate;       // mUSDC per 1 mBTC (scaled 1e18)</pre>
+
+    <h3>Swap Paths (6 total)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Direction</th>
+          <th>Function</th>
+          <th>Calculation</th>
+          <th>Reserve Check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>mETH → mUSDC</td>
+          <td><code>swapETHForUSDC()</code></td>
+          <td><code>usdcOut = ethIn × ethRate / 1e18</code></td>
+          <td><code>usdcReserve</code></td>
+        </tr>
+        <tr>
+          <td>mUSDC → mETH</td>
+          <td><code>swapUSDCForETH()</code></td>
+          <td><code>ethOut = usdcIn × 1e18 / ethRate</code></td>
+          <td><code>ethReserve</code></td>
+        </tr>
+        <tr>
+          <td>mBTC → mUSDC</td>
+          <td><code>swapBTCForUSDC()</code></td>
+          <td><code>usdcOut = btcIn × btcRate / 1e18</code></td>
+          <td><code>usdcReserve</code></td>
+        </tr>
+        <tr>
+          <td>mUSDC → mBTC</td>
+          <td><code>swapUSDCForBTC()</code></td>
+          <td><code>btcOut = usdcIn × 1e18 / btcRate</code></td>
+          <td><code>btcReserve</code></td>
+        </tr>
+        <tr>
+          <td>mETH → mBTC</td>
+          <td><code>swapETHForBTC()</code></td>
+          <td><code>usdcValue = ethIn × ethRate / 1e18<br/>btcOut = usdcValue × 1e18 / btcRate</code></td>
+          <td><code>btcReserve</code></td>
+        </tr>
+        <tr>
+          <td>mBTC → mETH</td>
+          <td><code>swapBTCForETH()</code></td>
+          <td><code>usdcValue = btcIn × btcRate / 1e18<br/>ethOut = usdcValue × 1e18 / ethRate</code></td>
+          <td><code>ethReserve</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><strong>Cross-rate swaps</strong> (mETH ↔ mBTC) route through mUSDC internally. For example, swapping <code>mETH → mBTC</code> first converts ETH to USDC value via <code>ethSwapRate</code>, then converts that USDC value to BTC via <code>btcSwapRate</code>.</p>
+
+    <h3>Key Functions</h3>
+    <ul>
+      <li><code>addLiquidity(ethAmount, btcAmount, usdcAmount)</code> — <code>onlyOwner</code>. Deposits tokens into DEX reserves. Emits <code>LiquidityAdded</code>.</li>
+      <li><code>getEthRate() → uint256</code> — Returns current mETH→mUSDC rate.</li>
+      <li><code>getBtcRate() → uint256</code> — Returns current mBTC→mUSDC rate.</li>
+      <li><code>setEthRate(newRate)</code> — <code>onlyOwner</code>. Updates mETH swap rate.</li>
+      <li><code>setBtcRate(newRate)</code> — <code>onlyOwner</code>. Updates mBTC swap rate.</li>
+    </ul>
+
+    <h3>Security</h3>
+    <ul>
+      <li><strong>SafeERC20</strong> — All token transfers use OpenZeppelin's SafeERC20 for secure handling.</li>
+      <li><strong>Checks-Effects-Interactions</strong> — State updates happen before token transfers to prevent reentrancy.</li>
+      <li><strong>Slippage protection</strong> — Every swap function accepts a <code>minOutput</code> parameter. If the calculated output is less than the minimum, the transaction reverts with <code>MockDEX__SlippageExceeded(actual, minimum)</code>.</li>
+      <li><strong>Reserve invariants</strong> — Reserves are updated atomically with swaps and tested with Foundry invariant tests (256 runs × 15 depth).</li>
+    </ul>
+
+    <h3>Errors</h3>
+    <ul>
+      <li><code>MockDEX__InsufficientLiquidity()</code> — Not enough tokens in reserve</li>
+      <li><code>MockDEX__SlippageExceeded(actual, minimum)</code> — Output below minimum</li>
+      <li><code>MockDEX__ZeroAmount()</code> — Input amount is zero</li>
+      <li><code>MockDEX__InvalidAddress()</code> — Zero address in constructor</li>
+      <li><code>MockDEX__InvalidRate()</code> — Swap rate set to zero</li>
+    </ul>
+
+    <h3>Events</h3>
+    <ul>
+      <li><code>LiquidityAdded(provider, ethAmount, btcAmount, usdcAmount)</code></li>
+      <li><code>Swapped(user, fromToken, toToken, amountIn, amountOut)</code></li>
+      <li><code>EthRateUpdated(oldRate, newRate)</code></li>
+      <li><code>BtcRateUpdated(oldRate, newRate)</code></li>
+    </ul>
+
+    <p>See the <a href="testing.html">Testing Guide</a> for details on the test suite covering all contracts.</p>
+  </div>
+
+  <!-- Page Navigation -->
+  <div class="container">
+    <div class="page-nav">
+      <a href="architecture.html" class="page-nav-link">
+        <span class="nav-label">← Previous</span>
+        <span class="nav-title">Architecture</span>
+      </a>
+      <a href="frontend.html" class="page-nav-link next">
+        <span class="nav-label">Next →</span>
+        <span class="nav-title">Frontend</span>
+      </a>
+    </div>
   </div>
 
   <footer class="site-footer">
