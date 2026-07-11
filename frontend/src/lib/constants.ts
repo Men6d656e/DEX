@@ -46,15 +46,15 @@ export const CHAIN_CONFIG = {
  */
 export const CONTRACT_ADDRESSES = {
   /** Mock ETH token (ERC20) */
-  mETH: "0x5fbdb2315678afecb367f032d93f642f64180aa3" as `0x${string}`,
+  mETH: "0x409219db0c1f3a1d836f3340e566b49d566030c8" as `0x${string}`,
   /** Mock BTC token (ERC20) */
-  mBTC: "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512" as `0x${string}`,
+  mBTC: "0xc662c3498f5f6f76e539c76de4662bb6d8596a82" as `0x${string}`,
   /** Mock USDC token (ERC20) — used in DEX swaps */
-  mUSDC: "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0" as `0x${string}`,
+  mUSDC: "0x8cad65ef7e7cc22280e7bf2ba728814dd3b0113c" as `0x${string}`,
   /** Faucet contract — distributes mETH and mBTC */
-  faucet: "0x0165878a594ca255338adfa4d48449f69242eb8f" as `0x${string}`,
+  faucet: "0x5d2660b4c2430c2a6800c93899289c859ef382e0" as `0x${string}`,
   /** MockDEX contract — mETH ↔ mUSDC swaps */
-  dex: "0xa513e6e4b8f2a923d98304ec87f64353c4d5c853" as `0x${string}`,
+  dex: "0x76986630e9393610bb0dfdae2b3f586d8411ca72" as `0x${string}`,
 } as const;
 
 // ================================================================
