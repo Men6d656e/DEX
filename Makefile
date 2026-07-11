@@ -3,15 +3,21 @@
 # Automation for smart contracts (Foundry) + frontend (Next.js)
 # ============================================================
 
-.PHONY: help install build test test-contracts test-frontend \
-	anvil deploy-anvil deploy-sepolia deploy-update dev dev-frontend prod prod-frontend \
-	clean docs fmt coverage generate-abi
+.PHONY: help install install-contracts install-frontend
+.PHONY: build build-contracts build-frontend
+.PHONY: test test-contracts test-frontend
+.PHONY: anvil deploy-anvil deploy-sepolia update-addresses
+.PHONY: dev dev-frontend prod prod-frontend
+.PHONY: clean clean-contracts clean-frontend
+.PHONY: fmt coverage generate-abi docs
+
+# ─── Help ──────────────────────────────────────────────────────
 
 help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
 	awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-# ─── Installation ───────────────────────────────────────────────
+# ─── Installation ──────────────────────────────────────────────
 
 install: ## Install all dependencies (forge + npm)
 	@echo "📦 Installing Foundry dependencies..."
@@ -30,7 +36,7 @@ install-frontend: ## Install only frontend dependencies
 	@npm install
 	@echo "✅ Frontend dependencies installed."
 
-# ─── Build ──────────────────────────────────────────────────────
+# ─── Build ─────────────────────────────────────────────────────
 
 build: ## Build contracts + frontend
 	@echo "🔨 Building contracts..."
@@ -49,7 +55,7 @@ build-frontend: ## Build only frontend
 	@npm run build
 	@echo "✅ Frontend built."
 
-# ─── Testing ────────────────────────────────────────────────────
+# ─── Testing ───────────────────────────────────────────────────
 
 test: ## Run all tests (contracts + frontend)
 	@echo "🧪 Running contract tests..."
@@ -68,13 +74,13 @@ test-frontend: ## Run only frontend tests
 	@npm test
 	@echo "✅ Frontend tests passed."
 
-# ─── Local Node ─────────────────────────────────────────────────
+# ─── Local Node ────────────────────────────────────────────────
 
 anvil: ## Start local Anvil node (port 8545)
 	@echo "🔥 Starting Anvil node on http://127.0.0.1:8545..."
 	cd contracts && anvil
 
-# ─── Deployment ─────────────────────────────────────────────────
+# ─── Deployment ────────────────────────────────────────────────
 
 deploy-anvil: build-contracts ## Deploy contracts to Anvil + auto-update frontend addresses
 	@echo "🚀 Deploying contracts to Anvil..."
@@ -103,23 +109,37 @@ deploy-sepolia: build-contracts ## Deploy contracts to Sepolia + auto-update fro
 		--interactives 1 && \
 	cd .. && $(MAKE) update-addresses CHAIN_ID=11155111
 
-# ─── Address Auto-Capture ──────────────────────────────────────
+# ─── Address Auto-Capture ─────────────────────────────────────
 
 update-addresses: ## Extract deployed addresses from broadcast JSON and update constants.ts
 	@echo "📝 Updating frontend contract addresses..."
 	@./scripts/update-addresses.sh $(CHAIN_ID)
 	@echo "✅ Addresses updated! Run 'make dev-frontend' to start the app."
 
-deploy-update: deploy-anvil ## Alias for deploy-anvil (now auto-updates addresses)
+# ─── Frontend Development ──────────────────────────────────────
 
-# ─── Coverage ───────────────────────────────────────────────────
+dev: install-frontend dev-frontend ## Install deps + start dev server
+
+dev-frontend: ## Start frontend dev server (localhost:3000)
+	@echo "🚀 Starting frontend dev server..."
+	cd frontend && npm run dev
+
+# ─── Production ────────────────────────────────────────────────
+
+prod: build-frontend prod-frontend ## Build + serve production
+
+prod-frontend: ## Serve production build (localhost:3000)
+	@echo "🚀 Starting production server..."
+	cd frontend && npm run start
+
+# ─── Coverage ──────────────────────────────────────────────────
 
 coverage: ## Generate Foundry coverage report
 	@echo "📊 Generating coverage report..."
 	cd contracts && forge coverage --report lcov
 	@echo "✅ Coverage report generated."
 
-# ─── Clean ──────────────────────────────────────────────────────
+# ─── Clean ─────────────────────────────────────────────────────
 
 clean: ## Clean all build artifacts and dependencies
 	@echo "🧹 Cleaning..."
@@ -140,7 +160,7 @@ clean-frontend: ## Clean only frontend artifacts
 	rm -rf frontend/node_modules
 	@echo "✅ Frontend artifacts cleaned."
 
-# ─── Code Quality ───────────────────────────────────────────────
+# ─── Code Quality ──────────────────────────────────────────────
 
 fmt: ## Format all code (Solidity + TypeScript)
 	@echo "💅 Formatting Solidity..."
@@ -156,7 +176,7 @@ generate-abi: ## Generate type-safe wagmi hooks from contract ABIs
 	cd frontend && npx wagmi generate
 	@echo "✅ ABI types generated in frontend/src/lib/generated.ts"
 
-# ─── Documentation ──────────────────────────────────────────────
+# ─── Documentation ─────────────────────────────────────────────
 
 docs: ## Serve documentation locally on port 3001
 	@echo "📖 Serving docs at http://127.0.0.1:3001..."
