@@ -130,7 +130,7 @@ contract DEXHandler is Test {
 
     /// @notice Swap USDC for BTC via a user account
     function swapUSDCForBTC(uint256 usdcAmount) public {
-        usdcAmount = bound(usdcAmount, 1, _maxSwapableUSDCForBTC());
+        usdcAmount = bound(usdcAmount, 1, _maxSwapableUsdcForBtc());
         if (usdcAmount == 0) return;
 
         _mintAndApprove(user, address(mUSDC), usdcAmount);
@@ -142,7 +142,7 @@ contract DEXHandler is Test {
 
     /// @notice Swap ETH for BTC via a user account
     function swapETHForBTC(uint256 ethAmount) public {
-        ethAmount = bound(ethAmount, 1, _maxSwapableETHForBTC());
+        ethAmount = bound(ethAmount, 1, _maxSwapableEthForBtc());
         if (ethAmount == 0) return;
 
         _mintAndApprove(user, address(mETH), ethAmount);
@@ -166,7 +166,7 @@ contract DEXHandler is Test {
 
     /// @notice Complex multi-swap: ETH→BTC then BTC→ETH round-trip via user2
     function roundTripETHtoBTCtoETH(uint256 ethAmount) public {
-        ethAmount = bound(ethAmount, 1, _maxSwapableETHForBTC());
+        ethAmount = bound(ethAmount, 1, _maxSwapableEthForBtc());
         if (ethAmount == 0) return;
 
         _mintAndApprove(user2, address(mETH), ethAmount);
@@ -227,13 +227,13 @@ contract DEXHandler is Test {
         return (usdcReserve * 1e18) / dex.btcSwapRate();
     }
 
-    function _maxSwapableUSDCForBTC() internal view returns (uint256) {
+    function _maxSwapableUsdcForBtc() internal view returns (uint256) {
         uint256 btcReserve = dex.btcReserve();
         if (btcReserve == 0) return 0;
         return (btcReserve * dex.btcSwapRate()) / 1e18;
     }
 
-    function _maxSwapableETHForBTC() internal view returns (uint256) {
+    function _maxSwapableEthForBtc() internal view returns (uint256) {
         uint256 btcReserve = dex.btcReserve();
         if (btcReserve == 0 || dex.btcSwapRate() == 0) return 0;
         uint256 maxUsdc = (btcReserve * dex.btcSwapRate()) / 1e18;

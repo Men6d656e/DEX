@@ -28,7 +28,7 @@ export const CHAIN_CONFIG = {
   sepolia: {
     id: 11_155_111, // 0xAA36A7
     name: "Sepolia",
-    rpcUrl: "https://rpc.sepolia.org",
+    rpcUrl: "https://sepolia.drpc.org",
     currency: "SepoliaETH",
     explorerUrl: "https://sepolia.etherscan.io",
   },

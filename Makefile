@@ -98,8 +98,8 @@ deploy-anvil: build-contracts ## Deploy contracts to Anvil + auto-update fronten
 deploy-sepolia: build-contracts ## Deploy contracts to Sepolia + auto-update frontend addresses
 	@echo "🚀 Deploying contracts to Sepolia..."
 	@echo ""
-	@read -p "Sepolia RPC URL (default: https://rpc.sepolia.org): " rpc; \
-	rpc=$${rpc:-https://rpc.sepolia.org}; \
+	@read -p "Sepolia RPC URL (default: https://sepolia.drpc.org): " rpc; \
+	rpc=$${rpc:-https://sepolia.drpc.org}; \
 	echo "⛓️  RPC: $$rpc"; \
 	echo ""; \
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
