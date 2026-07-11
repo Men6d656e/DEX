@@ -79,38 +79,27 @@ anvil: ## Start local Anvil node (port 8545)
 deploy-anvil: build-contracts ## Deploy contracts to local Anvil node
 	@echo "🚀 Deploying contracts to Anvil..."
 	@echo ""
-	@read -s -p "Private key (hidden input): " key; \
-	echo ""; \
-	sender=$$(cast wallet address --private-key $$key); \
-	echo "✅ Wallet: $$sender"; \
-	echo "🔥 Network: Anvil (localhost:8545)"; \
-	echo ""; \
-	export SENDER=$$sender; \
+	@echo "🔥 Network: Anvil (http://127.0.0.1:8545)"
+	@echo "💡 Default Anvil key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+	@echo ""
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url http://127.0.0.1:8545 \
 		--broadcast \
 		-vvv \
-		--private-key $$key \
-		--sender $$sender
+		--interactives 1
 
 deploy-sepolia: build-contracts ## Deploy contracts to Sepolia testnet
 	@echo "🚀 Deploying contracts to Sepolia..."
 	@echo ""
 	@read -p "Sepolia RPC URL (default: https://rpc.sepolia.org): " rpc; \
 	rpc=$${rpc:-https://rpc.sepolia.org}; \
-	read -s -p "Private key (hidden input): " key; \
-	echo ""; \
-	sender=$$(cast wallet address --private-key $$key); \
-	echo "✅ Wallet: $$sender"; \
-	echo "⛓️  Network: Sepolia ($$rpc)"; \
-	echo ""; \
-	export SENDER=$$sender; \
+	echo "⛓️  RPC: $$rpc"; \
+	echo ""
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $$rpc \
 		--broadcast \
 		-vvv \
-		--private-key $$key \
-		--sender $$sender
+		--interactives 1
 
 # ─── Coverage ───────────────────────────────────────────────────
 

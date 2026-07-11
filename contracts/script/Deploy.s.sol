@@ -48,23 +48,24 @@ contract Deploy is Script {
 
     /// @notice Main deployment entry point.
     ///         Called by `forge script`.
+    /// @notice Main deployment entry point.
+    ///         Called by `forge script`.
     function run() external {
-        // --- Setup ---
-        // The deployer's public address is read from the --sender flag,
-        // passed via the Makefile. This is set by deriving it from the
-        // private key using `cast wallet address --private-key`.
-        address deployer = vm.envAddress("SENDER");
-
         console2.log("============================================");
         console2.log("DEX Dashboard - Contract Deployment");
         console2.log("============================================");
+
+        // startBroadcast with no args — uses the key from --interactives 1 for signing.
+        // The sender address is derived automatically from the provided private key.
+        vm.startBroadcast();
+
+        // Derive deployer address from msg.sender inside the broadcast
+        address deployer = msg.sender;
+
         console2.log("Deployer:", deployer);
         console2.log("Chain ID:", block.chainid);
         console2.log("Block:   ", block.number);
         console2.log("");
-
-        // startBroadcast with no args — uses the key from --interactives 1 for signing
-        vm.startBroadcast();
 
         // --- Step 1: Deploy Mock Tokens ---
         // Use deployer as temporary faucet; will update after Faucet is deployed
