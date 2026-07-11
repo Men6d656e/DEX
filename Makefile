@@ -76,7 +76,7 @@ anvil: ## Start local Anvil node (port 8545)
 
 # ─── Deployment ─────────────────────────────────────────────────
 
-deploy-anvil: build-contracts ## Deploy contracts to local Anvil node
+deploy-anvil: build-contracts ## Deploy contracts to Anvil + auto-update frontend addresses
 	@echo "🚀 Deploying contracts to Anvil..."
 	@echo ""
 	@echo "🔥 Network: Anvil (http://127.0.0.1:8545)"
@@ -86,20 +86,31 @@ deploy-anvil: build-contracts ## Deploy contracts to local Anvil node
 		--rpc-url http://127.0.0.1:8545 \
 		--broadcast \
 		-vvv \
-		--interactives 1
+		--interactives 1 && \
+	cd .. && $(MAKE) update-addresses CHAIN_ID=31337
 
-deploy-sepolia: build-contracts ## Deploy contracts to Sepolia testnet
+deploy-sepolia: build-contracts ## Deploy contracts to Sepolia + auto-update frontend addresses
 	@echo "🚀 Deploying contracts to Sepolia..."
 	@echo ""
 	@read -p "Sepolia RPC URL (default: https://rpc.sepolia.org): " rpc; \
 	rpc=$${rpc:-https://rpc.sepolia.org}; \
 	echo "⛓️  RPC: $$rpc"; \
-	echo ""
+	echo ""; \
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url $$rpc \
 		--broadcast \
 		-vvv \
-		--interactives 1
+		--interactives 1 && \
+	cd .. && $(MAKE) update-addresses CHAIN_ID=11155111
+
+# ─── Address Auto-Capture ──────────────────────────────────────
+
+update-addresses: ## Extract deployed addresses from broadcast JSON and update constants.ts
+	@echo "📝 Updating frontend contract addresses..."
+	@./scripts/update-addresses.sh $(CHAIN_ID)
+	@echo "✅ Addresses updated! Run 'make dev-frontend' to start the app."
+
+deploy-update: deploy-anvil ## Alias for deploy-anvil (now auto-updates addresses)
 
 # ─── Coverage ───────────────────────────────────────────────────
 
@@ -137,29 +148,6 @@ fmt: ## Format all code (Solidity + TypeScript)
 	@echo "💅 Formatting frontend..."
 	@npm run lint -- --fix 2>/dev/null || true
 	@echo "✅ Formatting complete."
-
-# ─── Frontend Development ──────────────────────────────────────
-
-dev: install-frontend dev-frontend ## Install deps + start dev server
-
-dev-frontend: ## Start frontend dev server (localhost:3000)
-	@echo "🚀 Starting frontend dev server..."
-	cd frontend && npm run dev
-
-# ─── Production ────────────────────────────────────────────────
-
-prod: build-frontend prod-frontend ## Build + serve production
-
-prod-frontend: ## Serve production build (localhost:3000)
-	@echo "🚀 Starting production server..."
-	cd frontend && npm run start
-
-# ─── Address Auto-Capture ──────────────────────────────────────
-
-deploy-update: deploy-anvil ## Deploy to Anvil + auto-update frontend addresses
-	@echo "📝 Updating frontend contract addresses..."
-	@./scripts/update-addresses.sh 31337
-	@echo "✅ Addresses updated! Run 'make dev-frontend' to start the app."
 
 # ─── ABI Code Generation ───────────────────────────────────────
 
