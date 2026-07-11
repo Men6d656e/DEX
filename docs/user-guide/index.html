@@ -4,26 +4,69 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>User Guide — DEX Dashboard</title>
-  <!--
-    ════════════════════════════════════════════════════════════════
-    🔧 AFTER VERCEL DEPLOYMENT: Replace YOUR_VERCEL_DOMAIN below
-    with your actual Vercel domain (e.g., my-dex-app.vercel.app).
-    ════════════════════════════════════════════════════════════════
-  -->
-  <meta http-equiv="refresh" content="0; url=https://YOUR_VERCEL_DOMAIN/docs#faucet" />
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
-    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
-    h1 { font-size: 24px; margin-bottom: 16px; }
-    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
-    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
-  </style>
+  <meta name="description" content="Learn how to use the DEX Dashboard — connect your wallet, claim tokens, and start trading." />
+  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">User Guide</a>
+        <a href="../developer-guide/">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
+    </div>
+  </header>
+
   <div class="container">
-    <h1>📚 Documentation Moved</h1>
-    <p>The user guide has been moved into the interactive documentation hub inside the DEX Dashboard app.</p>
-    <a href="https://YOUR_VERCEL_DOMAIN/docs#faucet">Open Interactive Docs →</a>
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <span>User Guide</span>
+    </div>
+
+    <h1>👤 User Guide</h1>
+    <p>Learn how to connect your wallet, claim test tokens, perform swaps, and navigate the analytics dashboard.</p>
+
+    <div class="card-grid">
+      <a href="getting-started.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">🚀</div>
+        <h3>Getting Started</h3>
+        <p>Set up your wallet, connect to the dashboard, and understand the navigation.</p>
+      </a>
+      <a href="faucet.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">💰</div>
+        <h3>Using the Faucet</h3>
+        <p>Claim mock ETH and BTC tokens, track cooldowns, and view your claim history.</p>
+      </a>
+      <a href="swap.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">🔄</div>
+        <h3>Trading on the Swap</h3>
+        <p>Execute token swaps, understand rate calculations, and configure slippage settings.</p>
+      </a>
+      <a href="analytics.html" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-icon">📊</div>
+        <h3>Analytics Dashboard</h3>
+        <p>Read candlestick charts, track token statistics, and monitor your portfolio.</p>
+      </a>
+    </div>
+
+    <div class="content-section">
+      <h2>Need Help?</h2>
+      <p>If you encounter any issues, check the <a href="../developer-guide/">Developer Guide</a> for technical details or visit the <a href="https://github.com/Men6d656e/DEX" target="_blank" rel="noopener">GitHub repository</a> to open an issue.</p>
+    </div>
   </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License</p>
+    </div>
+  </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

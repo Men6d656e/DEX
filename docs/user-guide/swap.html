@@ -3,27 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Swap — DEX Dashboard Docs</title>
-  <!--
-    ════════════════════════════════════════════════════════════════
-    🔧 AFTER VERCEL DEPLOYMENT: Replace YOUR_VERCEL_DOMAIN below
-    with your actual Vercel domain (e.g., my-dex-app.vercel.app).
-    ════════════════════════════════════════════════════════════════
-  -->
-  <meta http-equiv="refresh" content="0; url=https://YOUR_VERCEL_DOMAIN/docs#swap" />
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
-    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
-    h1 { font-size: 24px; margin-bottom: 16px; }
-    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
-    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
-  </style>
+  <title>Trading on the Swap — DEX Dashboard User Guide</title>
+  <meta name="description" content="Learn how to trade mock tokens on the DEX Dashboard swap interface." />
+  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">User Guide</a>
+        <a href="../developer-guide/">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
+    </div>
+  </header>
+
   <div class="container">
-    <h1>📚 Docs Moved</h1>
-    <p>The Swap documentation is now part of the interactive docs hub.</p>
-    <a href="https://YOUR_VERCEL_DOMAIN/docs#swap">Open Swap Docs →</a>
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <a href="./">User Guide</a>
+      <span>/</span>
+      <span>Swap</span>
+    </div>
+
+    <h1>🔄 Trading on the Swap</h1>
+    <p>The Swap panel lets you trade mETH for mUSDC (and vice versa) using a fixed ratio set by the DEX contract owner.</p>
+
+    <h2>How to Execute a Swap</h2>
+    <ol>
+      <li><strong>Connect your wallet</strong> and make sure you have mETH or mUSDC tokens (use the <a href="faucet.html">Faucet</a> if needed).</li>
+      <li>Navigate to the <strong>Swap</strong> page.</li>
+      <li><strong>Select the "From" token</strong> — mETH or mUSDC — using the token dropdown.</li>
+      <li><strong>Enter the amount</strong> you want to swap. The "To" field automatically calculates the expected output based on the current rate.</li>
+      <li><strong>Review the rate</strong> — shows the current conversion ratio (e.g., 1 mETH = 1700 mUSDC).</li>
+      <li><strong>Adjust slippage</strong> (optional) — Click the settings icon to open the slippage configuration sheet. Default is 0.5%.</li>
+      <li><strong>Approve the token</strong> — If this is your first swap, you'll need to approve the DEX contract to spend your tokens.</li>
+      <li><strong>Click "Swap"</strong> — Confirm the transaction in MetaMask.</li>
+    </ol>
+
+    <h2>Understanding Slippage</h2>
+    <p>Slippage tolerance protects you from price changes between submitting and confirming a transaction. The DEX uses a fixed rate, so slippage isn't caused by market movement — it's a safety measure ensuring you receive at least your minimum expected amount.</p>
+    <ul>
+      <li><strong>Low (0.1%)</strong> — Tight tolerance, may cause reverts</li>
+      <li><strong>Moderate (0.5%)</strong> — Recommended for most trades</li>
+      <li><strong>High (1-2.5%)</strong> — Use if experiencing frequent reverts</li>
+    </ul>
+
+    <h2>Rate & Impact</h2>
+    <ul>
+      <li><strong>Rate</strong> — The fixed conversion ratio set by the DEX owner</li>
+      <li><strong>Expected Output</strong> — What you'll receive before slippage</li>
+      <li><strong>Minimum Received</strong> — The guaranteed minimum after slippage</li>
+      <li><strong>Price Impact</strong> — How much your trade affects the pool (shown in amber/yellow/red)</li>
+    </ul>
+
+    <blockquote>
+      <strong>Note:</strong> The DEX uses a ratio-based swap model (not an AMM). The rate is fixed by the contract owner and can only be changed by them. The DEX must have sufficient liquidity in its reserves to execute your swap.
+    </blockquote>
   </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License</p>
+    </div>
+  </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

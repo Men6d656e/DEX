@@ -3,27 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Faucet — DEX Dashboard Docs</title>
-  <!--
-    ════════════════════════════════════════════════════════════════
-    🔧 AFTER VERCEL DEPLOYMENT: Replace YOUR_VERCEL_DOMAIN below
-    with your actual Vercel domain (e.g., my-dex-app.vercel.app).
-    ════════════════════════════════════════════════════════════════
-  -->
-  <meta http-equiv="refresh" content="0; url=https://YOUR_VERCEL_DOMAIN/docs#faucet" />
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
-    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
-    h1 { font-size: 24px; margin-bottom: 16px; }
-    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
-    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
-  </style>
+  <title>Using the Faucet — DEX Dashboard User Guide</title>
+  <meta name="description" content="Learn how to use the DEX Dashboard faucet to claim mock tokens." />
+  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">User Guide</a>
+        <a href="../developer-guide/">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
+    </div>
+  </header>
+
   <div class="container">
-    <h1>📚 Docs Moved</h1>
-    <p>The Faucet documentation is now part of the interactive docs hub.</p>
-    <a href="https://YOUR_VERCEL_DOMAIN/docs#faucet">Open Faucet Docs →</a>
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <a href="./">User Guide</a>
+      <span>/</span>
+      <span>Faucet</span>
+    </div>
+
+    <h1>💰 Using the Faucet</h1>
+    <p>The Faucet allows you to mint mock tokens (mETH and mBTC) once every 24 hours per token. These tokens are used for trading on the DEX.</p>
+
+    <h2>How to Claim Tokens</h2>
+    <ol>
+      <li>Connect your wallet (see <a href="getting-started.html">Getting Started</a>).</li>
+      <li>Navigate to the <strong>Faucet</strong> page.</li>
+      <li>Select either <strong>mETH</strong> or <strong>mBTC</strong> using the token selector tabs.</li>
+      <li>Check your current balance for that token.</li>
+      <li>If the claim button says <strong>"Claim [Token]"</strong>, click it to receive 10 tokens.</li>
+      <li>Confirm the transaction in MetaMask when prompted.</li>
+    </ol>
+
+    <h2>Cooldown System</h2>
+    <p>Each token has a <strong>24-hour cooldown</strong> per wallet address. The cooldown is tracked independently for mETH and mBTC, meaning you can claim both tokens on the same day — just not the same token twice.</p>
+    <ul>
+      <li><strong>Progress bar</strong> — Shows how much of the cooldown has elapsed.</li>
+      <li><strong>Countdown display</strong> — Shows the exact time remaining until your next claim.</li>
+      <li><strong>Badge indicator</strong> — Shows "Claim Ready" (green) or "On Cooldown" (gray).</li>
+    </ul>
+
+    <h2>Claim History & Analytics</h2>
+    <p>The analytics panel on the Faucet page shows:</p>
+    <ul>
+      <li><strong>Lifetime Claimed</strong> — Total tokens claimed so far</li>
+      <li><strong>Last Claim</strong> — Timestamp of your most recent claim</li>
+      <li><strong>Cooldown Remaining</strong> — Time until next available claim</li>
+    </ul>
+
+    <blockquote>
+      <strong>Note:</strong> The Faucet distributes 10 tokens per claim. After claiming, your balance updates automatically. You can see your balances in the wallet dropdown or on the Analytics page.
+    </blockquote>
   </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License</p>
+    </div>
+  </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

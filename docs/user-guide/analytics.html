@@ -3,27 +3,97 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Analytics — DEX Dashboard Docs</title>
-  <!--
-    ════════════════════════════════════════════════════════════════
-    🔧 AFTER VERCEL DEPLOYMENT: Replace YOUR_VERCEL_DOMAIN below
-    with your actual Vercel domain (e.g., my-dex-app.vercel.app).
-    ════════════════════════════════════════════════════════════════
-  -->
-  <meta http-equiv="refresh" content="0; url=https://YOUR_VERCEL_DOMAIN/docs#analytics" />
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
-    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
-    h1 { font-size: 24px; margin-bottom: 16px; }
-    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
-    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
-  </style>
+  <title>Analytics Dashboard — DEX Dashboard User Guide</title>
+  <meta name="description" content="Learn how to use the DEX Dashboard analytics and charting features." />
+  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="./" class="active">User Guide</a>
+        <a href="../developer-guide/">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
+    </div>
+  </header>
+
   <div class="container">
-    <h1>📚 Docs Moved</h1>
-    <p>The Analytics documentation is now part of the interactive docs hub.</p>
-    <a href="https://YOUR_VERCEL_DOMAIN/docs#analytics">Open Analytics Docs →</a>
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <a href="./">User Guide</a>
+      <span>/</span>
+      <span>Analytics</span>
+    </div>
+
+    <h1>📊 Analytics Dashboard</h1>
+    <p>The Analytics page combines real market data from CoinGecko with on-chain DEX information and simulated trade history.</p>
+
+    <h2>Market Overview</h2>
+    <p>Four metric cards at the top show key statistics:</p>
+    <ul>
+      <li><strong>24h Volume</strong> — Total simulated trading volume in the last 24 hours</li>
+      <li><strong>Total Trades</strong> — Number of trades executed</li>
+      <li><strong>Active Users</strong> — Estimated unique users</li>
+      <li><strong>TVL</strong> — Total Value Locked in the DEX pool (calculated from actual reserves)</li>
+    </ul>
+
+    <h2>Candlestick Charts</h2>
+    <p>Powered by the CoinGecko API, the candlestick chart shows real price data for:</p>
+    <ul>
+      <li><strong>mETH</strong> — Tracks Ethereum (ETH) price</li>
+      <li><strong>mBTC</strong> — Tracks Bitcoin (BTC) price</li>
+      <li><strong>mUSDC</strong> — Tracks USDC stablecoin price</li>
+    </ul>
+    <p>You can switch between coins using the tab buttons and select time ranges (1d, 7d, 14d, 30d).</p>
+
+    <h3>Reading Candlesticks</h3>
+    <ul>
+      <li><strong>Green candle</strong> — Price went up (close > open)</li>
+      <li><strong>Red candle</strong> — Price went down (close < open)</li>
+      <li><strong>Wick (line)</strong> — The highest and lowest prices during the period</li>
+      <li><strong>Body (rectangle)</strong> — The opening and closing prices</li>
+      <li>Hover over any candle to see detailed OHLC (Open, High, Low, Close) values</li>
+    </ul>
+
+    <h2>24h Market Stats</h2>
+    <p>Below the chart selector, six metric cards display:</p>
+    <ul>
+      <li><strong>Price</strong> — Current price with 24h change indicator (green/red)</li>
+      <li><strong>24h High</strong> — Highest price in 24 hours</li>
+      <li><strong>24h Low</strong> — Lowest price in 24 hours</li>
+      <li><strong>24h Volume</strong> — Total trading volume</li>
+      <li><strong>Market Cap</strong> — Total market capitalization</li>
+      <li><strong>24h Change</strong> — Absolute price change</li>
+    </ul>
+
+    <h2>Token Statistics</h2>
+    <p>A table below the charts shows detailed stats for all mock tokens (mETH, mBTC, mUSDC), including price, 24h change, holders, and more.</p>
+
+    <h2>Portfolio</h2>
+    <p>When your wallet is connected, the Portfolio panel shows:</p>
+    <ul>
+      <li><strong>Total portfolio value</strong> in USD</li>
+      <li><strong>Individual token holdings</strong> with balance, price, and value</li>
+      <li><strong>Allocation bar</strong> showing the proportional breakdown of your holdings</li>
+    </ul>
+
+    <blockquote>
+      <strong>Note:</strong> Market data requires internet access to reach the CoinGecko API. If the API is unavailable, simulated data is shown instead (labeled "Simulated"). Token statistics and trade history use a combination of on-chain DEX data and simulated activity for the demo.
+    </blockquote>
   </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License</p>
+    </div>
+  </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>

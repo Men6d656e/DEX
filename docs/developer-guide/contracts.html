@@ -3,27 +3,98 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Contracts — DEX Dashboard Docs</title>
-  <!--
-    ════════════════════════════════════════════════════════════════
-    🔧 AFTER VERCEL DEPLOYMENT: Replace YOUR_VERCEL_DOMAIN below
-    with your actual Vercel domain (e.g., my-dex-app.vercel.app).
-    ════════════════════════════════════════════════════════════════
-  -->
-  <meta http-equiv="refresh" content="0; url=https://YOUR_VERCEL_DOMAIN/docs#developer" />
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
-    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
-    h1 { font-size: 24px; margin-bottom: 16px; }
-    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
-    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
-  </style>
+  <title>Smart Contracts — DEX Dashboard Developer Guide</title>
+  <meta name="description" content="Smart contract documentation for MockERC20, Faucet, and MockDEX." />
+  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../" class="brand">
+        <span class="brand-blue">DEX</span>
+        <span class="brand-muted">Dashboard</span>
+      </a>
+      <nav class="nav-links">
+        <a href="../">Home</a>
+        <a href="../user-guide/">User Guide</a>
+        <a href="./" class="active">Developer Guide</a>
+      </nav>
+      <button class="mobile-menu-btn">☰</button>
+    </div>
+  </header>
+
   <div class="container">
-    <h1>📚 Docs Moved</h1>
-    <p>The Smart Contracts documentation is now part of the interactive docs hub.</p>
-    <a href="https://YOUR_VERCEL_DOMAIN/docs#developer">Open Developer Docs →</a>
+    <div class="breadcrumbs">
+      <a href="../">Home</a>
+      <span>/</span>
+      <a href="./">Developer Guide</a>
+      <span>/</span>
+      <span>Smart Contracts</span>
+    </div>
+
+    <h1>📄 Smart Contracts</h1>
+    <p>Three contracts form the backend of the DEX Dashboard: MockERC20 (token), Faucet (distribution), and MockDEX (trading).</p>
+
+    <h2>MockERC20</h2>
+    <p>OpenZeppelin-based ERC20 token with mint capability restricted to a designated faucet address.</p>
+    <pre>
+Contract: MockERC20
+Inherits: OpenZeppelin ERC20, Ownable
+Key Features:
+- constructor(name, symbol, faucetAddress)
+- mint(to, amount) — only callable by the faucet address
+- setFaucet(newFaucet) — onlyOwner
+- TokensMinted(address indexed to, uint256 amount) event</pre>
+    <p><strong>Deployment:</strong> Three instances — mETH, mBTC, and mUSDC.</p>
+
+    <h2>Faucet</h2>
+    <p>Time-locked token distribution contract with per-user, per-token 24-hour cooldown tracking.</p>
+    <pre>
+Contract: Faucet
+Inherits: OpenZeppelin Ownable
+State:
+- lastClaim[user][token] → uint256 (unix timestamp)
+- lifetimeClaimed[user][token] → uint256
+- COOLDOWN: 24 hours
+- CLAIM_AMOUNT: 10 tokens (with 18 decimals)
+Key Functions:
+- claimToken(tokenIndex) — 0 = mETH, 1 = mBTC
+- getClaimInfo(user, tokenIndex) → (canClaim, timeRemaining, lifetimeClaimed, lastClaimTime)
+- setClaimAmount(amount) — onlyOwner
+- setCooldown(seconds) — onlyOwner
+Errors:
+- Faucet__CooldownNotElapsed(remaining)
+- Faucet__InvalidToken()</pre>
+
+    <h2>MockDEX</h2>
+    <p>Simple ratio-based swap contract enabling mETH ↔ mUSDC trades with slippage protection.</p>
+    <pre>
+Contract: MockDEX
+Inherits: OpenZeppelin Ownable
+State:
+- mETH, mUSDC: IERC20 token addresses
+- ethReserve, usdcReserve: uint256
+- swapRate: uint256 (e.g., 1700 = 1 mETH = 1700 mUSDC)
+Key Functions:
+- addLiquidity(ethAmount, usdcAmount) — onlyOwner
+- swapETHForUSDC(ethAmount, minUSDC)
+- swapUSDCForETH(usdcAmount, minETH)
+- getRate() → uint256
+- setRate(newRate) — onlyOwner
+Errors:
+- MockDEX__InsufficientLiquidity()
+- MockDEX__SlippageExceeded()
+- MockDEX__ZeroAmount()</pre>
+
+    <h2>Testing</h2>
+    <p>All contracts use Foundry's <code>forge test</code> with Solidity-based unit tests, fuzz testing, and custom error assertions. Target is 100% line coverage. See the <a href="testing.html">Testing Guide</a> for details.</p>
   </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>DEX Dashboard — MIT License</p>
+    </div>
+  </footer>
+  <script src="../assets/js/main.js"></script>
 </body>
 </html>
