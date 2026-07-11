@@ -46,3 +46,6 @@ lcov.info
 # Misc
 *.tsbuildinfo
 next-env.d.ts
+
+# Social media posts (generated, not part of source)
+social/
