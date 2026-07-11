@@ -80,6 +80,13 @@ anvil: ## Start local Anvil node (port 8545)
 	@echo "🔥 Starting Anvil node on http://127.0.0.1:8545..."
 	cd contracts && anvil
 
+# ─── Load Sepolia config from contracts/.env ──────────────────
+# This makes SEPOLIA_RPC_URL and ETHERSCAN_API_KEY available as
+# Make variables for the deploy-sepolia target.
+# If you don't have a .env file yet, copy the template:
+#   cp contracts/.env.example contracts/.env
+-include contracts/.env
+
 # ─── Deployment ────────────────────────────────────────────────
 
 deploy-anvil: build-contracts ## Deploy contracts to Anvil + auto-update frontend addresses
@@ -98,14 +105,15 @@ deploy-anvil: build-contracts ## Deploy contracts to Anvil + auto-update fronten
 deploy-sepolia: build-contracts ## Deploy contracts to Sepolia + auto-update frontend addresses
 	@echo "🚀 Deploying contracts to Sepolia..."
 	@echo ""
-	@read -p "Sepolia RPC URL (default: https://sepolia.drpc.org): " rpc; \
-	rpc=$${rpc:-https://sepolia.drpc.org}; \
-	echo "⛓️  RPC: $$rpc"; \
-	echo ""; \
+	@echo "⛓️  Using SEPOLIA_RPC_URL from contracts/.env"
+	@echo "🔑 Using ETHERSCAN_API_KEY from contracts/.env"
+	@echo ""
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
-		--rpc-url $$rpc \
+		--rpc-url $(SEPOLIA_RPC_URL) \
 		--broadcast \
 		-vvv \
+		--verify \
+		--etherscan-api-key $(ETHERSCAN_API_KEY) \
 		--interactives 1 && \
 	cd .. && $(MAKE) update-addresses CHAIN_ID=11155111
 
