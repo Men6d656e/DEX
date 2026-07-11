@@ -230,6 +230,13 @@ The Solidity test suite includes:
 
 **16 fuzz functions** × 256 runs each + **4 invariant tests** × 256 runs × 15 depth.
 
+### Documentation
+
+User and developer documentation is available via GitHub Pages:
+- [User Guide](https://men6d656e.github.io/DEX/user-guide/)
+- [Developer Guide](https://men6d656e.github.io/DEX/developer-guide/)
+- [Documentation Home](https://men6d656e.github.io/DEX/)
+
 ---
 
 ## 🔧 Makefile Commands

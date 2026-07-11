@@ -3,105 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Frontend — DEX Dashboard Developer Guide</title>
-  <meta name="description" content="Frontend architecture for the DEX Dashboard Next.js application." />
-  <link rel="stylesheet" href="../assets/css/style.css" />
+  <title>Frontend — DEX Dashboard Docs</title>
+  <meta http-equiv="refresh" content="0; url=https://dex-dashboard.vercel.app/docs#developer" />
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
+    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
+    h1 { font-size: 24px; margin-bottom: 16px; }
+    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
+    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../" class="brand">
-        <span class="brand-blue">DEX</span>
-        <span class="brand-muted">Dashboard</span>
-      </a>
-      <nav class="nav-links">
-        <a href="../">Home</a>
-        <a href="../user-guide/">User Guide</a>
-        <a href="./" class="active">Developer Guide</a>
-      </nav>
-      <button class="mobile-menu-btn">☰</button>
-    </div>
-  </header>
-
   <div class="container">
-    <div class="breadcrumbs">
-      <a href="../">Home</a>
-      <span>/</span>
-      <a href="./">Developer Guide</a>
-      <span>/</span>
-      <span>Frontend</span>
-    </div>
-
-    <h1>⚛ Frontend Architecture</h1>
-
-    <h2>Tech Stack</h2>
-    <ul>
-      <li><strong>Framework:</strong> Next.js 16 (App Router)</li>
-      <li><strong>Language:</strong> TypeScript (strict mode)</li>
-      <li><strong>Styling:</strong> Tailwind CSS v4 + shadcn/ui</li>
-      <li><strong>Wallet:</strong> wagmi v2 + viem</li>
-      <li><strong>Charts:</strong> Custom SVG candlestick charts + CoinGecko API</li>
-      <li><strong>Icons:</strong> Lucide React</li>
-      <li><strong>State:</strong> React Query (@tanstack/react-query)</li>
-    </ul>
-
-    <h2>Project Structure</h2>
-    <pre>
-frontend/src/
-├── app/                    # App Router pages
-│   ├── layout.tsx          # Root layout (header, footer, providers)
-│   ├── page.tsx            # Home page with hero, features, stats
-│   ├── not-found.tsx       # Custom 404 page
-│   ├── faucet/page.tsx     # Faucet claim interface
-│   ├── swap/page.tsx       # Swap trading interface
-│   └── analytics/          # Analytics dashboard
-│       ├── page.tsx        # Server component (metadata + layout)
-│       └── analytics-client.tsx  # Client component (data + charts)
-├── components/             # Shared UI components
-│   ├── ui/                 # shadcn/ui primitives (13 components)
-│   ├── layout/             # Header, Footer, WalletButton
-│   ├── home/               # StatsCounters, AnimatedSection
-│   ├── faucet/             # FaucetClaimCard, FaucetAnalytics
-│   ├── swap/               # SwapCard, SlippageSettings, LiquidityInfo
-│   ├── analytics/          # StatsCards, TokenStatsTable, TradeHistoryTable, PortfolioOverview
-│   └── charts/             # CandlestickChart, MarketStats
-├── hooks/                  # Custom React hooks
-│   ├── use-dex.ts          # DEX contract interactions
-│   ├── use-faucet.ts       # Faucet contract interactions
-│   ├── use-token-balances.ts  # Token balance queries
-│   ├── use-analytics.ts    # Analytics data (simulated + on-chain)
-│   └── use-market-data.ts  # CoinGecko market data
-└── lib/                    # Utilities and constants
-    ├── constants.ts        # Contract addresses, token metadata
-    ├── wagmi.ts            # wagmi configuration
-    ├── market-data.ts      # CoinGecko API client
-    ├── dex-abi.ts          # DEX + ERC20 ABIs
-    ├── faucet-abi.ts       # Faucet ABI
-    └── utils.ts            # cn() utility (tailwind-merge + clsx)</pre>
-
-    <h2>State Management</h2>
-    <ul>
-      <li><strong>Wallet:</strong> wagmi hooks (useAccount, useBalance, useChainId)</li>
-      <li><strong>Contract reads:</strong> useReadContract, useReadContracts (wagmi)</li>
-      <li><strong>Contract writes:</strong> useWriteContract + useWaitForTransactionReceipt</li>
-      <li><strong>Caching:</strong> @tanstack/react-query (configured with 10s stale time)</li>
-      <li><strong>Local state:</strong> React useState for form inputs and UI state</li>
-    </ul>
-
-    <h2>Component Patterns</h2>
-    <ul>
-      <li><strong>Server/Client split:</strong> Pages are server components; interactive UI is in client components</li>
-      <li><strong>Animated sections:</strong> AnimatedSection wraps content with Intersection Observer fade-in</li>
-      <li><strong>Error handling:</strong> Every component handles loading, error, empty, and not-deployed states</li>
-      <li><strong>Accessibility:</strong> Skip-to-content link, aria-labels, focus-visible styles, reduced-motion support</li>
-    </ul>
+    <h1>📚 Docs Moved</h1>
+    <p>The Frontend documentation is now part of the interactive docs hub.</p>
+    <a href="https://dex-dashboard.vercel.app/docs#developer">Open Developer Docs →</a>
   </div>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p>DEX Dashboard — MIT License</p>
-    </div>
-  </footer>
-  <script src="../assets/js/main.js"></script>
 </body>
 </html>

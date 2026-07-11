@@ -3,99 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Testing — DEX Dashboard Developer Guide</title>
-  <meta name="description" content="Testing guide for the DEX Dashboard — contract tests and frontend tests." />
-  <link rel="stylesheet" href="../assets/css/style.css" />
+  <title>Testing — DEX Dashboard Docs</title>
+  <meta http-equiv="refresh" content="0; url=https://dex-dashboard.vercel.app/docs#developer" />
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
+    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
+    h1 { font-size: 24px; margin-bottom: 16px; }
+    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
+    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../" class="brand">
-        <span class="brand-blue">DEX</span>
-        <span class="brand-muted">Dashboard</span>
-      </a>
-      <nav class="nav-links">
-        <a href="../">Home</a>
-        <a href="../user-guide/">User Guide</a>
-        <a href="./" class="active">Developer Guide</a>
-      </nav>
-      <button class="mobile-menu-btn">☰</button>
-    </div>
-  </header>
-
   <div class="container">
-    <div class="breadcrumbs">
-      <a href="../">Home</a>
-      <span>/</span>
-      <a href="./">Developer Guide</a>
-      <span>/</span>
-      <span>Testing</span>
-    </div>
-
-    <h1>🧪 Testing Guide</h1>
-    <p>The project includes both Solidity contract tests (using Foundry) and frontend tests (using Vitest).</p>
-
-    <h2>Contract Tests</h2>
-    <p>Foundry tests are written in Solidity and live alongside the contracts in the <code>contracts/test/</code> directory.</p>
-    <pre>make test-contracts</pre>
-
-    <h3>Test Files</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>File</th>
-          <th>Tests</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>MockERC20.t.sol</td>
-          <td>Minting, only-faucet restriction, setFaucet, events, ownership transfer</td>
-        </tr>
-        <tr>
-          <td>Faucet.t.sol</td>
-          <td>Claim mETH, claim mBTC, 24h cooldown, time-remaining, lifetime tracking, double-claim revert, onlyOwner setters</td>
-        </tr>
-        <tr>
-          <td>MockDEX.t.sol</td>
-          <td>Add liquidity, swap mETH→mUSDC, swap mUSDC→mETH, slippage protection, rate updates, insufficient liquidity, fuzz tests with <code>bound()</code></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h3>Coverage</h3>
-    <pre>make coverage</pre>
-    <p>Generates an LCOV coverage report showing line-by-line coverage of all contracts.</p>
-
-    <h2>Frontend Tests</h2>
-    <p>Frontend tests use Vitest and React Testing Library. Test files live in <code>frontend/tests/</code>.</p>
-    <pre>make test-frontend</pre>
-
-    <h3>Test Areas</h3>
-    <ul>
-      <li><strong>Utility functions:</strong> calculateOutput, applySlippage, formatDexBalance, formatRate, calculatePriceImpact</li>
-      <li><strong>Contract logic:</strong> formatTokenBalance, formatCountdown, formatTimestamp</li>
-    </ul>
-
-    <h2>Running All Tests</h2>
-    <pre>make test</pre>
-    <p>This runs both contract tests and frontend tests sequentially.</p>
-
-    <h2>Best Practices</h2>
-    <ul>
-      <li>Write tests before implementing new features (TDD where practical)</li>
-      <li>Use fuzz testing for numerical edge cases in contracts</li>
-      <li>Test all error paths and revert conditions</li>
-      <li>Aim for 100% line coverage on all contracts</li>
-      <li>Frontend utility functions should be pure and easily testable</li>
-    </ul>
+    <h1>📚 Docs Moved</h1>
+    <p>The Testing documentation is now part of the interactive docs hub.</p>
+    <a href="https://dex-dashboard.vercel.app/docs#developer">Open Developer Docs →</a>
   </div>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p>DEX Dashboard — MIT License</p>
-    </div>
-  </footer>
-  <script src="../assets/js/main.js"></script>
 </body>
 </html>

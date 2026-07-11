@@ -3,79 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Architecture — DEX Dashboard Developer Guide</title>
-  <meta name="description" content="System architecture for the DEX Dashboard monorepo." />
-  <link rel="stylesheet" href="../assets/css/style.css" />
+  <title>Architecture — DEX Dashboard Docs</title>
+  <meta http-equiv="refresh" content="0; url=https://dex-dashboard.vercel.app/docs#developer" />
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0f; color: #e4e4e7; }
+    .container { text-align: center; padding: 40px 20px; max-width: 500px; }
+    h1 { font-size: 24px; margin-bottom: 16px; }
+    p { font-size: 16px; color: #a1a1aa; line-height: 1.6; }
+    a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../" class="brand">
-        <span class="brand-blue">DEX</span>
-        <span class="brand-muted">Dashboard</span>
-      </a>
-      <nav class="nav-links">
-        <a href="../">Home</a>
-        <a href="../user-guide/">User Guide</a>
-        <a href="./" class="active">Developer Guide</a>
-      </nav>
-      <button class="mobile-menu-btn">☰</button>
-    </div>
-  </header>
-
   <div class="container">
-    <div class="breadcrumbs">
-      <a href="../">Home</a>
-      <span>/</span>
-      <a href="./">Developer Guide</a>
-      <span>/</span>
-      <span>Architecture</span>
-    </div>
-
-    <h1>🏗 System Architecture</h1>
-
-    <h2>Monorepo Structure</h2>
-    <p>The project is organized as a monorepo with three main directories:</p>
-    <pre>
-DEX/
-├── contracts/         # Foundry (Solidity) project
-│   ├── src/           # Smart contracts
-│   ├── test/          # Solidity tests
-│   └── script/        # Deployment scripts
-├── frontend/          # Next.js 16 application
-│   ├── src/
-│   │   ├── app/       # Pages (Home, Faucet, Swap, Analytics)
-│   │   ├── components/# UI components
-│   │   ├── hooks/     # Custom React hooks
-│   │   └── lib/       # Utilities & constants
-├── docs/              # GitHub Pages documentation
-├── Makefile           # Build automation
-└── SPEC.md            # Architecture specification</pre>
-
-    <h2>Data Flow</h2>
-    <ol>
-      <li><strong>User connects wallet</strong> via wagmi + MetaMask connector</li>
-      <li><strong>Frontend reads on-chain data</strong> using wagmi hooks (useReadContract, useReadContracts)</li>
-      <li><strong>User submits transactions</strong> through wagmi's useWriteContract</li>
-      <li><strong>Chart data</strong> is fetched from CoinGecko API with simulated fallback</li>
-      <li><strong>Analytics data</strong> combines on-chain reserves with simulated trade data</li>
-    </ol>
-
-    <h2>Key Design Decisions</h2>
-    <ul>
-      <li><strong>Foundry</strong> — Native Solidity testing with fuzz support, fast compilation</li>
-      <li><strong>wagmi + viem</strong> — Modern React hooks for wallet connection and contract interaction</li>
-      <li><strong>shadcn/ui</strong> — Accessible, customizable Radix UI primitives with Tailwind</li>
-      <li><strong>Ratio-based swap</strong> — Educational simplicity over AMM complexity</li>
-      <li><strong>Raw HTML docs</strong> — GitHub Pages compatible with zero build step</li>
-    </ul>
+    <h1>📚 Docs Moved</h1>
+    <p>The Architecture documentation is now part of the interactive docs hub.</p>
+    <a href="https://dex-dashboard.vercel.app/docs#developer">Open Developer Docs →</a>
   </div>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p>DEX Dashboard — MIT License</p>
-    </div>
-  </footer>
-  <script src="../assets/js/main.js"></script>
 </body>
 </html>

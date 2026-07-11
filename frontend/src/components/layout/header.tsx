@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 /** Navigation link items */
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
+  { href: "/docs", label: "Docs" },
   { href: "/faucet", label: "Faucet" },
   { href: "/swap", label: "Swap" },
   { href: "/analytics", label: "Analytics" },
@@ -84,13 +85,6 @@ export function Header() {
 
         {/* ── Right Actions ── */}
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* Docs link */}
-          <Button variant="ghost" size="sm" asChild className="hidden sm:flex" aria-label="View documentation">
-            <a href="/docs" target="_blank" rel="noopener noreferrer">
-              Docs
-            </a>
-          </Button>
-
           {/* Wallet button */}
           <WalletButton />
 
@@ -142,15 +136,7 @@ export function Header() {
               );
             })}
 
-            {/* Mobile docs link */}
-            <a
-              href="/docs"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-            >
-              Docs
-            </a>
+
           </div>
         </nav>
       )}
