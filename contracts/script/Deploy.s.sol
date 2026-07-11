@@ -48,8 +48,6 @@ contract Deploy is Script {
 
     /// @notice Main deployment entry point.
     ///         Called by `forge script`.
-    /// @notice Main deployment entry point.
-    ///         Called by `forge script`.
     function run() external {
         console2.log("============================================");
         console2.log("DEX Dashboard - Contract Deployment");
@@ -59,26 +57,41 @@ contract Deploy is Script {
         // The sender address is derived automatically from the provided private key.
         vm.startBroadcast();
 
-        // Derive deployer address from msg.sender inside the broadcast
-        address deployer = msg.sender;
+        // ── Step 1: Deploy Mock Tokens (with placeholder faucet) ──
+        // Use a throwaway address as the initial faucet. We'll read the
+        // real signer address from the Ownable owner() right after deploy.
+        // This avoids needing an env var or manual --sender flag.
+        console2.log("--- Step 1: Deploying Mock Tokens ---");
+
+        address PLACEHOLDER_FAUCET = address(0xDEAD);
+
+        MockERC20 mETH = new MockERC20("Mock ETH", "mETH", PLACEHOLDER_FAUCET);
+        console2.log("mETH  deployed at:", address(mETH));
+
+        MockERC20 mBTC = new MockERC20("Mock BTC", "mBTC", PLACEHOLDER_FAUCET);
+        console2.log("mBTC  deployed at:", address(mBTC));
+
+        MockERC20 mUSDC = new MockERC20("Mock USDC", "mUSDC", PLACEHOLDER_FAUCET);
+        console2.log("mUSDC deployed at:", address(mUSDC));
+        console2.log("");
+
+        // ── Read the signer address ──
+        // The contract constructor set owner = msg.sender (the signer from
+        // --interactives 1). Read it back to know who we're deploying as.
+        address deployer = mETH.owner();
 
         console2.log("Deployer:", deployer);
         console2.log("Chain ID:", block.chainid);
         console2.log("Block:   ", block.number);
         console2.log("");
 
-        // --- Step 1: Deploy Mock Tokens ---
-        // Use deployer as temporary faucet; will update after Faucet is deployed
-        console2.log("--- Step 1: Deploying Mock Tokens ---");
-
-        MockERC20 mETH = new MockERC20("Mock ETH", "mETH", deployer);
-        console2.log("mETH  deployed at:", address(mETH));
-
-        MockERC20 mBTC = new MockERC20("Mock BTC", "mBTC", deployer);
-        console2.log("mBTC  deployed at:", address(mBTC));
-
-        MockERC20 mUSDC = new MockERC20("Mock USDC", "mUSDC", deployer);
-        console2.log("mUSDC deployed at:", address(mUSDC));
+        // ── Set real faucet to deployer (for Step 4 minting) ──
+        // Now set the token faucet to the actual deployer address so
+        // we can mint tokens in Step 4. This will be updated again in Step 5.
+        mETH.setFaucet(deployer);
+        mBTC.setFaucet(deployer);
+        mUSDC.setFaucet(deployer);
+        console2.log("Set token faucets to deployer (temporary)");
         console2.log("");
 
         // --- Step 2: Deploy Faucet ---
@@ -102,12 +115,11 @@ contract Deploy is Script {
         console2.log("");
 
         // --- Step 4: Add Initial Liquidity to DEX ---
-        // IMPORTANT: This must happen BEFORE updating faucet addresses (Step 5)
-        // because deployer is still the faucet for all tokens at this point.
         console2.log("--- Step 4: Adding Initial Liquidity ---");
 
         // Mint tokens to deployer for DEX liquidity
-        // Deployer is still the faucet for mETH, mBTC, mUSDC (not yet updated)
+        // Faucet is now deployer (set above), and broadcast msg.sender is
+        // also deployer — so the mint check passes.
         mUSDC.mint(deployer, INITIAL_USDC_LIQUIDITY);
         mETH.mint(deployer, INITIAL_ETH_LIQUIDITY);
         mBTC.mint(deployer, INITIAL_BTC_LIQUIDITY);
@@ -125,8 +137,7 @@ contract Deploy is Script {
         console2.log("");
 
         // --- Step 5: Configure Token Faucet Addresses ---
-        // Now it's safe to point mETH/mBTC faucets to the real Faucet contract.
-        // mUSDC faucet remains as deployer (for future liquidity if needed).
+        // Point all token faucets to the real Faucet contract.
         console2.log("--- Step 5: Configuring Faucet Addresses ---");
 
         mETH.setFaucet(address(faucet));
