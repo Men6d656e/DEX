@@ -19,13 +19,10 @@ import {MockDEX} from "../src/MockDEX.sol";
  * 5. MockDEX — Ratio-based DEX for mETH ↔ mUSDC and mBTC ↔ mUSDC swaps
  *
  * Usage:
- *   export SENDER=0xYourWalletAddress
- *   Anvil:   forge script script/Deploy.s.sol:Deploy --rpc-url http://127.0.0.1:8545 --broadcast --interactives 1 --sender $SENDER
- *   Sepolia: forge script script/Deploy.s.sol:Deploy --rpc-url $SEPOLIA_RPC_URL --broadcast --interactives 1 --sender $SENDER
+ *   Anvil:   make deploy-anvil
+ *   Sepolia: make deploy-sepolia
  *
- * Note: --interactives 1 prompts for the PRIVATE KEY to sign transactions.
- *       SENDER env var + --sender flag provides the public address for the script.
- *       Do NOT set PRIVATE_KEY in a .env file when using --interactives.
+ * Both commands prompt for the private key, derive the sender address, and deploy.
  *
  * The script outputs contract addresses which should be copied to the frontend config.
  */
@@ -53,11 +50,9 @@ contract Deploy is Script {
     ///         Called by `forge script`.
     function run() external {
         // --- Setup ---
-        // The deployer's public address is read from the SENDER env var
-        // (set via `export SENDER=0x...` or passed via Makefile).
-        // The private key is provided securely via --interactives 1 at the CLI.
-        // These are two separate mechanisms — never use vm.envUint("PRIVATE_KEY")
-        // with --interactives because the interactive prompt doesn't set env vars.
+        // The deployer's public address is read from the --sender flag,
+        // passed via the Makefile. This is set by deriving it from the
+        // private key using `cast wallet address --private-key`.
         address deployer = vm.envAddress("SENDER");
 
         console2.log("============================================");

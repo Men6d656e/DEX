@@ -154,7 +154,7 @@ contract DEXHandler is Test {
 
     /// @notice Swap BTC for ETH via a user account
     function swapBTCForETH(uint256 btcAmount) public {
-        btcAmount = bound(btcAmount, 1, _maxSwapableBTCForETH());
+        btcAmount = bound(btcAmount, 1, _maxSwapableBtcForEth());
         if (btcAmount == 0) return;
 
         _mintAndApprove(user, address(mBTC), btcAmount);
@@ -241,7 +241,7 @@ contract DEXHandler is Test {
         return (maxUsdc * 1e18) / dex.ethSwapRate();
     }
 
-    function _maxSwapableBTCForETH() internal view returns (uint256) {
+    function _maxSwapableBtcForEth() internal view returns (uint256) {
         uint256 ethReserve = dex.ethReserve();
         if (ethReserve == 0 || dex.ethSwapRate() == 0) return 0;
         uint256 maxUsdc = (ethReserve * dex.ethSwapRate()) / 1e18;

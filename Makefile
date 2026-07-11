@@ -76,46 +76,41 @@ anvil: ## Start local Anvil node (port 8545)
 
 # ─── Deployment ─────────────────────────────────────────────────
 
-deploy-anvil: build-contracts ## Deploy contracts to local Anvil node (interactive key input)
+deploy-anvil: build-contracts ## Deploy contracts to local Anvil node
 	@echo "🚀 Deploying contracts to Anvil..."
 	@echo ""
-	@echo "You need two things:"
-	@echo "  1. Your wallet ADDRESS (public) — paste below when prompted"
-	@echo "  2. Your PRIVATE KEY — will be prompted by --interactives"
-	@echo ""
-	@echo "For Anvil: use the first address from the anvil startup output."
-	@echo ""
-	@read -p "Wallet address (0x...): " addr; \
-	export SENDER=$$addr; \
+	@read -s -p "Private key (hidden input): " key; \
 	echo ""; \
-	echo "✅ SENDER set to $$SENDER"; \
-	echo "🔑 Now paste your private key when prompted..."; \
+	sender=$$(cast wallet address --private-key $$key); \
+	echo "✅ Wallet: $$sender"; \
+	echo "🔥 Network: Anvil (localhost:8545)"; \
+	echo ""; \
+	export SENDER=$$sender; \
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
 		--rpc-url http://127.0.0.1:8545 \
 		--broadcast \
 		-vvv \
-		--sender $$SENDER \
-		--interactives 1
+		--private-key $$key \
+		--sender $$sender
 
-deploy-sepolia: build-contracts ## Deploy contracts to Sepolia testnet (interactive key input)
+deploy-sepolia: build-contracts ## Deploy contracts to Sepolia testnet
 	@echo "🚀 Deploying contracts to Sepolia..."
 	@echo ""
-	@echo "You need:"
-	@echo "  1. SEPOLIA_RPC_URL env var (e.g., export SEPOLIA_RPC_URL=https://rpc.sepolia.org)"
-	@echo "  2. Your wallet ADDRESS (public) — paste below"
-	@echo "  3. Your PRIVATE KEY — will be prompted by --interactives"
-	@echo ""
-	@read -p "Wallet address (0x...): " addr; \
-	export SENDER=$$addr; \
+	@read -p "Sepolia RPC URL (default: https://rpc.sepolia.org): " rpc; \
+	rpc=$${rpc:-https://rpc.sepolia.org}; \
+	read -s -p "Private key (hidden input): " key; \
 	echo ""; \
-	echo "✅ SENDER set to $$SENDER"; \
-	echo "🔑 Now paste your private key when prompted..."; \
+	sender=$$(cast wallet address --private-key $$key); \
+	echo "✅ Wallet: $$sender"; \
+	echo "⛓️  Network: Sepolia ($$rpc)"; \
+	echo ""; \
+	export SENDER=$$sender; \
 	cd contracts && forge script script/Deploy.s.sol:Deploy \
-		--rpc-url $(SEPOLIA_RPC_URL) \
+		--rpc-url $$rpc \
 		--broadcast \
 		-vvv \
-		--sender $$SENDER \
-		--interactives 1
+		--private-key $$key \
+		--sender $$sender
 
 # ─── Coverage ───────────────────────────────────────────────────
 
